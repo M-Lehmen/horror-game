@@ -1,0 +1,12 @@
+# Godot 4: Cache und importierte Dateien, werden beim Öffnen neu erzeugt
+.godot/
+
+# Fertige Builds (Exporte) gehören nicht ins Repo
+/build/
+
+# Export-Einstellungen können Passwörter (z. B. Android-Keystore) enthalten
+export_credentials.cfg
+
+# Betriebssystem-Müll
+.DS_Store
+Thumbs.db

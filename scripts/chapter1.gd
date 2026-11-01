@@ -137,7 +137,7 @@ func _on_drop_used() -> void:
 
 func _place_box() -> void:
 	var spots := [Vector3(1.3, 0.3, 2.8), Vector3(1.9, 0.3, 2.8), Vector3(1.6, 0.7, 2.8)]
-	_box(self, Vector3(0.5, 0.38, 0.4), spots[boxes_placed], CARDBOARD, true)
+	_crate(Vector3(0.5, 0.38, 0.4), spots[boxes_placed])
 	boxes_placed += 1
 
 
@@ -413,16 +413,16 @@ func _build_environment() -> void:
 	post_layer.add_child(post)
 
 
-## Prozedurale Oberflächen, bis echte CC0-Texturen da sind.
+## CC0-Texturen von Poly Haven (assets/CREDITS.md), Rest prozedural.
 func _make_surfaces() -> void:
 	surf = {
-		"grass": _surface(Color(0.22, 0.29, 0.16), Vector3.ONE * 0.25, 4.0, 0.05),
-		"asphalt": _surface(Color(0.14, 0.14, 0.15), Vector3.ONE * 0.5, 2.0, 0.2),
-		"concrete": _surface(Color(0.48, 0.48, 0.46), Vector3.ONE * 0.5, 1.5, 0.08),
-		"siding": _surface(Color(0.6, 0.57, 0.5), Vector3(0.01, 0.25, 0.01), 3.0, 0.04, FastNoiseLite.TYPE_VALUE),
-		"roof": _surface(Color(0.24, 0.21, 0.2), Vector3(0.3, 0.6, 0.3), 5.0, 0.08, FastNoiseLite.TYPE_CELLULAR),
-		"wood": _surface(Color(0.36, 0.26, 0.17), Vector3(0.03, 0.3, 0.3), 2.0, 0.04, FastNoiseLite.TYPE_VALUE),
-		"hedge": _surface(Color(0.1, 0.19, 0.08), Vector3.ONE * 0.6, 8.0, 0.1, FastNoiseLite.TYPE_CELLULAR),
+		"grass": _pbr("leafy_grass", 0.4),
+		"asphalt": _pbr("asphalt_02", 0.3),
+		"concrete": _pbr("concrete_pavement", 0.5),
+		"siding": _pbr("weathered_plank_siding", 0.5, Color(0.85, 0.82, 0.75)),
+		"roof": _pbr("grey_roof_tiles", 0.5),
+		"wood": _pbr("wood_floor_worn", 0.5),
+		"hedge": _pbr("forest_leaves_03", 0.8, Color(0.6, 0.75, 0.55)),
 		"bark": _surface(Color(0.24, 0.18, 0.13), Vector3(0.6, 0.05, 0.6), 6.0, 0.06),
 		"soil": _surface(Color(0.17, 0.12, 0.09), Vector3.ONE * 0.8, 5.0, 0.12),
 	}
@@ -595,14 +595,8 @@ func _build_decor() -> void:
 
 
 func _bush(pos: Vector3, r: float) -> void:
-	var parts := [[Vector3(0, r * 0.8, 0), r], [Vector3(r * 0.6, r * 0.6, r * 0.3), r * 0.75],
-			[Vector3(-r * 0.6, r * 0.6, -r * 0.2), r * 0.8]]
-	for part in parts:
-		var s := CSGSphere3D.new()
-		s.position = pos + part[0]
-		s.radius = part[1]
-		s.material = surf.hedge
-		add_child(s)
+	var variant := 1 + int(absf(pos.x + pos.z)) % 2
+	_model("res://assets/models/shrub_0%d/shrub_0%d_1k.gltf" % [variant, variant], pos, r * 1.8, pos.x)
 
 
 func _flower_bed(pos: Vector3, size: Vector2) -> void:
@@ -746,10 +740,10 @@ func _build_house() -> void:
 	back.rotation.x = deg_to_rad(-35)
 
 	# Umzugskartons im Wohnzimmer
-	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(-3, 0.25, 2), CARDBOARD, true)
-	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(-3, 0.75, 2), CARDBOARD, true)
-	_box(self, Vector3(0.8, 0.6, 0.6), Vector3(-2, 0.3, 3.5), CARDBOARD, true)
-	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(4, 0.25, 1.2), CARDBOARD, true)
+	_crate(Vector3(0.6, 0.5, 0.5), Vector3(-3, 0.25, 2))
+	_crate(Vector3(0.6, 0.5, 0.5), Vector3(-3, 0.75, 2))
+	_crate(Vector3(0.8, 0.6, 0.6), Vector3(-2, 0.3, 3.5))
+	_crate(Vector3(0.6, 0.5, 0.5), Vector3(4, 0.25, 1.2))
 	var photos = _interactable(Vector3(3.2, 0.25, 2.8), Vector3(0.6, 0.5, 0.5), CARDBOARD, "PROMPT_LOOK")
 	photos.used.connect(func() -> void: ui.show_thought("THOUGHT_PHOTOS", 4.0))
 
@@ -785,14 +779,11 @@ func _build_house() -> void:
 
 ## Möbel und Kleinkram im Haus.
 func _build_interior() -> void:
-	var fabric := _surface(Color(0.3, 0.29, 0.34), Vector3.ONE * 3.0, 1.5, 0.3)
 	var wood: Material = surf.wood
 
 	# Wohnzimmer: Sofa an der Innenwand, Couchtisch, Stehlampe, Regal, Bilder
-	_box(self, Vector3(2.0, 0.42, 0.85), Vector3(-4.4, 0.21, 0.6), fabric, true)
-	_box(self, Vector3(2.0, 0.5, 0.2), Vector3(-4.4, 0.67, 0.27), fabric, false)
-	for dx in [-1.0, 1.0]:
-		_box(self, Vector3(0.18, 0.6, 0.85), Vector3(-4.4 + dx, 0.3, 0.6), fabric, false)
+	_model("res://assets/models/Sofa_01/Sofa_01_1k.gltf", Vector3(-4.4, 0, 0.6), 0.85)
+	_solid(Vector3(2.0, 0.85, 0.85), Vector3(-4.4, 0.425, 0.6))
 	_box(self, Vector3(1.0, 0.05, 0.55), Vector3(-4.5, 0.42, 1.9), wood, true)
 	for dx in [-0.45, 0.45]:
 		for dz in [-0.22, 0.22]:
@@ -816,8 +807,8 @@ func _build_interior() -> void:
 	# Küche: Kühlschrank, Hängeschrank, Tisch mit zwei Stühlen
 	_box(self, Vector3(0.7, 1.8, 0.7), Vector3(5.35, 0.9, -4.3), Color(0.82, 0.82, 0.78), true)
 	_box(self, Vector3(0.4, 0.7, 2.0), Vector3(5.6, 2.0, -2.0), wood, false)
-	_box(self, Vector3(1.2, 0.05, 0.8), Vector3(2.8, 0.75, -2.2), wood, true)
-	_cyl(self, 0.06, 0.72, Vector3(2.8, 0.36, -2.2), wood)
+	_model("res://assets/models/WoodenTable_01/WoodenTable_01_1k.gltf", Vector3(2.8, 0, -2.2), 0.77, PI / 2)
+	_solid(Vector3(0.8, 0.77, 1.2), Vector3(2.8, 0.385, -2.2))
 	for dz in [-0.65, 0.65]:
 		_box(self, Vector3(0.42, 0.04, 0.42), Vector3(2.8, 0.45, -2.2 + dz), wood, true)
 		_box(self, Vector3(0.42, 0.5, 0.04), Vector3(2.8, 0.72, -2.2 + dz * 1.32), wood, false)
@@ -826,8 +817,14 @@ func _build_interior() -> void:
 	_box(self, Vector3(1.6, 0.02, 1.2), Vector3(2.4, 3.03, 2.3), _surface(Color(0.45, 0.35, 0.55), Vector3.ONE * 2.0, 1.0, 0.3), false)
 	_box(self, Vector3(1.0, 0.75, 0.5), Vector3(1.0, 3.375, 4.4), wood, true)
 	_box(self, Vector3(0.6, 0.4, 0.4), Vector3(-1.5, 3.2, 4.3), Color(0.7, 0.25, 0.2), true)
-	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.25, -2.5), CARDBOARD, true)
-	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.75, -2.5), CARDBOARD, true)
+	_crate(Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.25, -2.5))
+	_crate(Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.75, -2.5))
+
+
+## Umzugskarton: CC0-Modell plus Kollision; pos ist die Mitte.
+func _crate(size: Vector3, pos: Vector3) -> void:
+	_model("res://assets/models/cardboard_box_01/cardboard_box_01_1k.gltf", pos - Vector3(0, size.y / 2.0, 0), size.y, pos.x)
+	_solid(size, pos)
 
 
 ## Treppe an der Rückwand: sichtbare Stufen, Kollision ist eine glatte Rampe
@@ -928,8 +925,8 @@ func _car(pos: Vector3, rot_y: float, color: Color, collide: bool, cabin_alpha: 
 
 
 func _lamp(pos: Vector3) -> void:
-	_cyl(self, 0.07, 4.2, pos + Vector3(0, 2.1, 0), Color(0.1, 0.1, 0.1), true)
-	_box(self, Vector3(0.4, 0.2, 0.4), pos + Vector3(0, 4.25, 0), Color(0.9, 0.85, 0.6), false)
+	_model("res://assets/models/street_lamp_01/street_lamp_01_1k.gltf", pos, 4.4)
+	_solid(Vector3(0.2, 4.0, 0.2), pos + Vector3(0, 2.0, 0))
 	var light := OmniLight3D.new()
 	light.position = pos + Vector3(0, 4.0, 0)
 	light.light_color = Color(1.0, 0.8, 0.55)
@@ -999,6 +996,51 @@ func _surface(color: Color, scale: Vector3, bump: float, freq: float = 0.04,
 	m.uv1_world_triplanar = true
 	m.uv1_scale = scale
 	return m
+
+
+## PBR-Material aus assets/textures/<id>/ (Farbe, Normal-Map, Rauheit), weltbezogen triplanar.
+## scale = Kacheln pro Meter, tint färbt die Textur ein.
+func _pbr(id: String, scale: float, tint: Color = Color.WHITE) -> StandardMaterial3D:
+	var base := "res://assets/textures/%s/%s_" % [id, id]
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(base + "diff_1k.jpg")
+	m.albedo_color = tint
+	m.normal_enabled = true
+	m.normal_texture = load(base + "nor_gl_1k.jpg")
+	m.roughness_texture = load(base + "rough_1k.jpg")
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * scale
+	return m
+
+
+## Lädt ein glTF-Modell, skaliert es auf die gewünschte Höhe und stellt es mit der Unterseite auf pos.
+func _model(path: String, pos: Vector3, height: float, rot_y: float = 0.0) -> Node3D:
+	var inst: Node3D = load(path).instantiate()
+	add_child(inst)
+	var box := AABB()
+	var first := true
+	for mesh in inst.find_children("*", "MeshInstance3D", true, false):
+		var b: AABB = mesh.global_transform * mesh.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	var s := height / maxf(box.size.y, 0.001)
+	inst.scale = Vector3.ONE * s
+	inst.rotation.y = rot_y
+	inst.position = pos - Vector3(0, box.position.y * s, 0)
+	return inst
+
+
+## Unsichtbare Kollision für Modelle.
+func _solid(size: Vector3, pos: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.position = pos
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	add_child(body)
 
 
 func _look(look: Variant) -> Material:

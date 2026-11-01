@@ -1,15 +1,26 @@
 keys,en,de
 GAME_TITLE,The Observer,Der Beobachter
 HINT_CONTROLS,WASD: move · Mouse: look · E: interact · Ctrl: crouch · F2: language · Esc: free mouse,WASD: laufen · Maus: umsehen · E: interagieren · Strg: ducken · F2: Sprache · Esc: Maus freigeben
-TASK_EXPLORE,Look around the house,Sieh dich im Haus um
+TASK_BOXES,Carry the boxes inside,Trag die Kartons ins Haus
+TASK_EXPLORE,Explore the house: upstairs and cellar,Erkunde das Haus: Obergeschoss und Keller
 TASK_GET_MAIL,Check the mail,Post holen
-TASK_PORCH,Go back to the porch,Geh zurück zur Veranda
+TASK_TO_CAR,Go back to your car,Geh zurück zu deinem Auto
 PROMPT_MAILBOX,[E] Open mailbox,[E] Briefkasten öffnen
 PROMPT_LOOK,[E] Look,[E] Ansehen
 PROMPT_CLOSE,[E] Put the letter away,[E] Brief weglegen
+PROMPT_TRUNK,[E] Take a box,[E] Karton nehmen
+PROMPT_DROP,[E] Put the box down,[E] Karton abstellen
+PROMPT_DOOR,[E] Open door,[E] Tür öffnen
 THOUGHT_ARRIVE,112 Linden Avenue. Our house. It still doesn't feel real.,Linden Avenue 112. Unser Haus. Es fühlt sich immer noch nicht echt an.
-THOUGHT_BOXES,Boxes everywhere. The move is still weeks away. I should check the mail before I leave.,"Überall Kartons. Bis zum Umzug sind es noch Wochen. Bevor ich fahre, sehe ich nach der Post."
+THOUGHT_UNLOAD,"First the boxes from the trunk. Three of them, then I'll look around.","Erst die Kartons aus dem Kofferraum. Drei Stück, dann sehe ich mich um."
+THOUGHT_WALTER,"Mr. Greaves stopped mowing. He's just standing there, watching me.",Mr. Greaves hat aufgehört zu mähen. Er steht einfach da und sieht mich an.
+THOUGHT_BOXES,"That was the last one. Now the rest of the house: upstairs, and the cellar.","Das war der letzte. Jetzt der Rest vom Haus: oben, und der Keller."
 THOUGHT_PHOTOS,The kids' drawings. Lily packed them herself.,Die Bilder der Kinder. Lily hat sie selbst eingepackt.
+THOUGHT_KIDSROOM,Pencil marks on the wall. Someone measured their children here. The last line says 1987.,Bleistiftstriche an der Wand. Hier hat jemand seine Kinder gemessen. Der letzte Strich ist von 1987.
+THOUGHT_CELLAR,Locked. The cellar key wasn't with the others.,Abgeschlossen. Der Kellerschlüssel war nicht bei den anderen.
+THOUGHT_KITCHEN,The old owners left nothing behind. Not even a crumb.,Die Vorbesitzer haben nichts zurückgelassen. Nicht mal einen Krümel.
+THOUGHT_HOUSE_DONE,"Enough for today. I'll check the mail, then head back.","Genug für heute. Ich sehe nach der Post, dann fahre ich zurück."
+THOUGHT_HARRIET,Mrs. Price is waving from across the street. She seems nice.,Mrs. Price winkt von gegenüber. Sie wirkt nett.
 LETTER_1,"Dear new neighbors at 112 Linden Avenue,","Liebe neue Nachbarn in der Linden Avenue 112,"
 LETTER_2,allow me to welcome you to the neighborhood.,"erlauben Sie mir, Sie in der Nachbarschaft willkommen zu heißen."
 LETTER_3,"My family has watched over this house for decades. It has been my duty to wait for its second coming, and I am glad the waiting is finally over.","Meine Familie wacht seit Jahrzehnten über dieses Haus. Es war meine Aufgabe, auf seine Wiederkehr zu warten, und ich bin froh, dass das Warten endlich vorbei ist."
@@ -17,9 +28,12 @@ LETTER_4,I see you have children. How many? I will learn their names soon. Young
 LETTER_5,I will be watching.,Ich werde zusehen.
 LETTER_SIGNATURE,- The Observer,- Der Beobachter
 THOUGHT_WHO_WRITES,Who writes something like this? Typed. No sender. The postmark is from here.,Wer schreibt so etwas? Getippt. Kein Absender. Der Poststempel ist von hier.
+THOUGHT_WATCHED,I feel like someone is watching me.,"Ich habe das Gefühl, dass mich jemand beobachtet."
 THOUGHT_SOMEONE_THERE,Someone is standing behind the hedge across the street.,Da steht jemand hinter der Hecke gegenüber.
 THOUGHT_GONE,Gone. Or was nobody there at all?,Weg. Oder war da nie jemand?
+THOUGHT_ENGINE,An engine. Behind the house across the street.,Ein Motor. Hinter dem Haus gegenüber.
 THOUGHT_STREET_CAR,That car is driving way too slowly.,Der Wagen fährt viel zu langsam.
+THOUGHT_SAME_MAN,He's looking right at me. It's him. The man from behind the hedge.,Er sieht mich direkt an. Das ist er. Der Mann hinter der Hecke.
 GAME_OVER_FOLLOWED,You should not have followed.,Du hättest nicht folgen sollen.
 CHAPTER1_END,End of Chapter 1: The Key,Ende von Kapitel 1: Der Schlüssel
 DEMO_END,Thanks for playing the prototype.,Danke fürs Spielen des Prototyps.

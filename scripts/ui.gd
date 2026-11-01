@@ -15,6 +15,8 @@ var flash: ColorRect
 var center_label: Label
 var _subtitle_id := 0
 var _hint_id := 0
+var _task_key := ""
+var _task_suffix := ""
 var _typewriter: SystemFont
 
 
@@ -103,8 +105,21 @@ func _fill_center(l: Label) -> void:
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 
-func set_task(key: String) -> void:
-	task_label.text = key
+## suffix wird unübersetzt angehängt, z. B. " (1/3)".
+func set_task(key: String, suffix: String = "") -> void:
+	_task_key = key
+	_task_suffix = suffix
+	_refresh_task()
+
+
+func _refresh_task() -> void:
+	task_label.text = tr(_task_key) + _task_suffix if _task_key != "" else ""
+
+
+func _notification(what: int) -> void:
+	# Mit Suffix ist der Text kein Key mehr, deshalb beim Sprachwechsel selbst neu setzen.
+	if what == NOTIFICATION_TRANSLATION_CHANGED and task_label != null:
+		_refresh_task()
 
 
 func set_prompt(key: String) -> void:

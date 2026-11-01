@@ -12,6 +12,7 @@ extends Node3D
 const PlayerScript := preload("res://scripts/player.gd")
 const UIScript := preload("res://scripts/ui.gd")
 const InteractableScript := preload("res://scripts/interactable.gd")
+const POST_SHADER := preload("res://assets/shaders/post_process.gdshader")
 
 const LETTER_KEYS: Array[String] = [
 	"LETTER_1", "LETTER_2", "LETTER_3", "LETTER_4", "LETTER_5", "LETTER_SIGNATURE",
@@ -350,26 +351,65 @@ func _flat_distance(a: Vector3, b: Vector3) -> float:
 # --- Welt bauen -------------------------------------------------------------
 
 func _build_environment() -> void:
+	# Bedeckter Spätnachmittag: grauer Himmel, gedämpfte Farben, wenig Kontrast in den Schatten
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.36, 0.4, 0.45)
+	sky_mat.sky_horizon_color = Color(0.58, 0.58, 0.56)
+	sky_mat.ground_horizon_color = Color(0.5, 0.5, 0.48)
+	sky_mat.ground_bottom_color = Color(0.18, 0.18, 0.17)
+	sky_mat.sun_angle_max = 20.0
+	var sky := Sky.new()
+	sky.sky_material = sky_mat
+
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.45, 0.48, 0.5)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.5, 0.52, 0.55)
-	env.ambient_light_energy = 0.4
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.5
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 0.95
+	env.sdfgi_enabled = true
+	env.sdfgi_use_occlusion = true
+	env.ssao_enabled = true
+	env.ssao_intensity = 1.6
+	env.ssil_enabled = true
+	env.glow_enabled = true
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.05
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.45, 0.48, 0.5)
-	env.fog_density = 0.025
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.fog_light_color = Color(0.52, 0.54, 0.55)
+	env.fog_density = 0.018
+	env.fog_sky_affect = 0.4
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 0.8
+	env.adjustment_contrast = 1.06
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-35, 40, 0)
-	sun.light_energy = 0.8
-	sun.light_color = Color(1.0, 0.9, 0.75)
+	sun.rotation_degrees = Vector3(-28, 40, 0)
+	sun.light_energy = 0.7
+	sun.light_color = Color(1.0, 0.88, 0.72)
+	sun.light_angular_distance = 2.0  # weiche Schattenkanten
 	sun.shadow_enabled = true
+	sun.shadow_blur = 1.5
+	sun.directional_shadow_max_distance = 60.0
+	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # bedeckt: keine sichtbare Sonnenscheibe
 	add_child(sun)
+
+	# Nachbearbeitung unter der UI (UI liegt auf Ebene 10)
+	var post_layer := CanvasLayer.new()
+	post_layer.layer = 5
+	add_child(post_layer)
+	var post := ColorRect.new()
+	post.set_anchors_preset(Control.PRESET_FULL_RECT)
+	post.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var post_mat := ShaderMaterial.new()
+	post_mat.shader = POST_SHADER
+	post.material = post_mat
+	post_layer.add_child(post)
 
 
 func _build_world() -> void:

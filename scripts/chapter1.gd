@@ -432,6 +432,18 @@ func _make_surfaces() -> void:
 	lit.emission = Color(1.0, 0.72, 0.42)
 	lit.emission_energy_multiplier = 1.4
 	surf.lit_window = lit
+	# Nachbarfenster: dunkel spiegelnd (kein Innenraum dahinter)
+	var glass := StandardMaterial3D.new()
+	glass.albedo_color = Color(0.04, 0.05, 0.07)
+	glass.roughness = 0.08
+	glass.metallic = 0.5
+	surf.glass = glass
+	# Eigenes Haus: durchsichtige Scheiben
+	var pane := StandardMaterial3D.new()
+	pane.albedo_color = Color(0.6, 0.65, 0.7, 0.12)
+	pane.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	pane.roughness = 0.05
+	surf.pane = pane
 	var shade := StandardMaterial3D.new()
 	shade.albedo_color = Color(0.9, 0.85, 0.7)
 	shade.emission_enabled = true
@@ -468,7 +480,7 @@ func _build_world() -> void:
 
 	# Claires Auto mit Kofferraum voller Kartons
 	_car(CAR_SPOT, 0.0, Color(0.35, 0.4, 0.45), true)
-	trunk = _interactable(CAR_SPOT + Vector3(0, 0.85, 2.2), Vector3(1.5, 0.4, 0.25), Color(0.3, 0.35, 0.4), "PROMPT_TRUNK")
+	trunk = _interactable(CAR_SPOT + Vector3(0, 0.6, 2.27), Vector3(1.4, 0.4, 0.06), Color(0.3, 0.35, 0.4), "PROMPT_TRUNK")
 	trunk.enabled = false
 	trunk.used.connect(_on_trunk_used)
 
@@ -493,10 +505,10 @@ func _build_world() -> void:
 	observer.visible = false
 
 	# Sein dunkler Wagen wartet hinter dem Haus gegenüber, die Kabine ist leicht durchsichtig.
-	dark_car = _car(DRIVE_PATH[0], 0.0, Color(0.06, 0.06, 0.07), false, 0.35)
-	_box(dark_car, Vector3(0.4, 0.5, 0.3), Vector3(-0.4, 1.2, 0.1), Color(0.03, 0.03, 0.03), false)
+	dark_car = _car(DRIVE_PATH[0], 0.0, Color(0.06, 0.06, 0.07), false, true)
+	_box(dark_car, Vector3(0.4, 0.45, 0.3), Vector3(-0.4, 0.98, 0.3), Color(0.03, 0.03, 0.03), false)
 	driver_head = Node3D.new()
-	driver_head.position = Vector3(-0.4, 1.5, 0.1)
+	driver_head.position = Vector3(-0.4, 1.2, 0.3)
 	dark_car.add_child(driver_head)
 	var skull := CSGSphere3D.new()
 	skull.radius = 0.12
@@ -535,7 +547,6 @@ func _build_neighborhood() -> void:
 
 	# Geparkte Autos
 	_car(Vector3(-22.5, 0, 10), 0.0, Color(0.3, 0.32, 0.25), true)
-	_car(Vector3(25.5, 0, 10), 0.0, Color(0.5, 0.48, 0.42), true)
 	_car(Vector3(-30, 0, 21.8), PI / 2, Color(0.2, 0.25, 0.35), true)
 	_car(Vector3(29.5, 0, 28), PI, Color(0.4, 0.15, 0.12), true)
 
@@ -616,6 +627,7 @@ func _build_decor() -> void:
 		_model(M % [kind, kind], spot, rng.randf_range(0.3, 0.6), rng.randf() * TAU)
 
 	_leaves(1600)
+	_grass_field(14000)
 
 
 func _bush(pos: Vector3, r: float) -> void:
@@ -747,6 +759,18 @@ func _build_house() -> void:
 		_sub(upper, Vector3(1.4, 1.2, 0.6), Vector3(x, 4.5, 4.9), wall)
 	_box(upper, Vector3(11.6, 2.8, 0.15), Vector3(0, 4.4, 0), wall, false) # Innenwand
 	_sub(upper, Vector3(1.2, 2.2, 0.4), Vector3(-4.0, 4.1, 0), wall)       # Tür Kinderzimmer
+
+	# Scheiben und Zierleisten an den Fensteröffnungen, Rahmen um die Haustür
+	for w in [[Vector3(-3.5, 1.5, 4.9), Vector2(1.6, 1.2)], [Vector3(3.5, 1.5, 4.9), Vector2(1.6, 1.2)],
+			[Vector3(-3.5, 4.5, 4.9), Vector2(1.4, 1.2)], [Vector3(0, 4.5, 4.9), Vector2(1.4, 1.2)],
+			[Vector3(3.5, 4.5, 4.9), Vector2(1.4, 1.2)]]:
+		var size: Vector2 = w[1]
+		_box(self, Vector3(size.x, size.y, 0.02), w[0], surf.pane, false)
+		_frame(self, w[0] + Vector3(0, 0, 0.13), size)
+	_frame(self, Vector3(0, 1.1, 5.03), Vector2(1.2, 2.2))
+	for side in [[Vector3(-5.9, 1.5, 2.5), PI / 2], [Vector3(5.9, 1.5, -2.5), -PI / 2]]:
+		var p := _box(self, Vector3(1.6, 1.2, 0.02), side[0], surf.pane, false)
+		p.rotation.y = side[1]
 
 	var roof: Material = surf.roof
 	var front := _box(self, Vector3(12.8, 0.2, 6.4), Vector3(0, 7.65, 2.5), roof, false)
@@ -902,13 +926,25 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	for wx in [-3.0, 3.0]:
 		for wy in [1.6, 4.1]:
 			# Ein Fenster pro Haus ist von innen beleuchtet.
-			var pane: Variant = surf.lit_window if wx > 0.0 and wy < 2.0 else Color(0.08, 0.09, 0.11)
+			var pane: Variant = surf.lit_window if wx > 0.0 and wy < 2.0 else surf.glass
 			_box(h, Vector3(1.4, 1.1, 0.06), Vector3(wx, wy, 4.02), pane, false)
+			_frame(h, Vector3(wx, wy, 4.06), Vector2(1.4, 1.1))
+	_frame(h, Vector3(0, 1.05, 4.06), Vector2(1.1, 2.1))
 	_box(h, Vector3(4, 0.04, 2), Vector3(0, 0.02, 5), Color(0.35, 0.27, 0.2), false)
 	_box(h, Vector3(3, 0.02, sidewalk + 9), Vector3(-6.5, 0.012, (sidewalk - 9) / 2.0), surf.concrete, false)
 	if with_mailbox:
 		_box(h, Vector3(0.1, 1.0, 0.1), Vector3(2.5, 0.5, sidewalk - 0.3), Color(0.15, 0.15, 0.15), false)
 		_box(h, Vector3(0.35, 0.3, 0.5), Vector3(2.5, 1.15, sidewalk - 0.3), Color(0.2, 0.2, 0.22), false)
+
+
+## Weiße Zierleiste um ein Fenster oder eine Tür in der xy-Ebene (Front zeigt nach +z).
+func _frame(parent: Node, center: Vector3, size: Vector2) -> void:
+	var trim := Color(0.88, 0.86, 0.82)
+	var t := 0.09
+	_box(parent, Vector3(size.x + t * 2.0, t, 0.06), center + Vector3(0, size.y / 2.0 + t / 2.0, 0), trim, false)
+	_box(parent, Vector3(size.x + t * 3.0, t * 1.3, 0.12), center - Vector3(0, size.y / 2.0 + t / 2.0, -0.03), trim, false)
+	for side in [-1.0, 1.0]:
+		_box(parent, Vector3(t, size.y, 0.06), center + Vector3(side * (size.x / 2.0 + t / 2.0), 0, 0), trim, false)
 
 
 ## Einfache Figur, die Nase zeigt die Blickrichtung (-z). Der rechte Arm liegt in meta "arm".
@@ -933,18 +969,37 @@ func _person(pos: Vector3, body_color: Color, skin: Color) -> Node3D:
 	return p
 
 
-## Auto, Front zeigt nach -z. cabin_alpha < 1 macht die Kabine durchsichtig.
-func _car(pos: Vector3, rot_y: float, color: Color, collide: bool, cabin_alpha: float = 1.0) -> Node3D:
+## Limousine der 80er, Front zeigt nach -z. see_through: Seitenscheiben durchsichtig (Fahrer sichtbar).
+func _car(pos: Vector3, rot_y: float, color: Color, collide: bool, see_through: bool = false) -> Node3D:
 	var c := Node3D.new()
 	c.position = pos
 	c.rotation.y = rot_y
 	add_child(c)
-	_box(c, Vector3(1.8, 0.8, 4.2), Vector3(0, 0.65, 0), color, collide)
-	_box(c, Vector3(1.6, 0.6, 2.2), Vector3(0, 1.35, 0.2), Color(0.06, 0.07, 0.09, cabin_alpha), false)
-	for wx in [-0.85, 0.85]:
-		for wz in [-1.3, 1.3]:
-			var wheel := _cyl(c, 0.33, 0.25, Vector3(wx, 0.33, wz), Color(0.04, 0.04, 0.04))
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = color
+	paint.metallic = 0.5
+	paint.roughness = 0.35
+	paint.clearcoat_enabled = true
+	var glass: Material = surf.pane if see_through else surf.glass
+	var dark := Color(0.05, 0.05, 0.05)
+	_box(c, Vector3(1.8, 0.55, 4.5), Vector3(0, 0.55, 0), paint, collide)          # Karosserie
+	_box(c, Vector3(1.64, 0.5, 1.7), Vector3(0, 1.07, 0.3), glass, false)          # Seitenscheiben
+	_box(c, Vector3(1.66, 0.06, 1.6), Vector3(0, 1.34, 0.3), paint, false)         # Dach
+	var front := _box(c, Vector3(1.6, 0.62, 0.04), Vector3(0, 1.06, -0.72), glass, false)
+	front.rotation.x = -0.65
+	var rear := _box(c, Vector3(1.6, 0.58, 0.04), Vector3(0, 1.06, 1.3), glass, false)
+	rear.rotation.x = 0.6
+	for z in [-2.28, 2.28]:
+		_box(c, Vector3(1.86, 0.18, 0.12), Vector3(0, 0.38, z), dark, false)       # Stoßstangen
+	for x in [-0.62, 0.62]:
+		_box(c, Vector3(0.36, 0.14, 0.03), Vector3(x, 0.66, -2.26), surf.lamp_shade, false)
+		_box(c, Vector3(0.36, 0.12, 0.03), Vector3(x, 0.66, 2.26), Color(0.45, 0.04, 0.03), false)
+	for wx in [-0.84, 0.84]:
+		for wz in [-1.4, 1.4]:
+			var wheel := _cyl(c, 0.33, 0.24, Vector3(wx, 0.33, wz), dark)
 			wheel.rotation.z = PI / 2
+			var hub := _cyl(c, 0.19, 0.25, Vector3(wx * 1.01, 0.33, wz), Color(0.55, 0.55, 0.55))
+			hub.rotation.z = PI / 2
 	return c
 
 
@@ -959,25 +1014,90 @@ func _lamp(pos: Vector3) -> void:
 	add_child(light)
 
 
-## Gerader Zaun zwischen zwei Punkten auf einer Achse.
+## Weißer Lattenzaun zwischen zwei Punkten auf einer Achse: Latten als MultiMesh, eine Kollisionsbox.
 func _fence(a: Vector3, b: Vector3) -> void:
-	var size := Vector3(maxf(absf(b.x - a.x), 0.08), 1.0, maxf(absf(b.z - a.z), 0.08))
-	_box(self, size, (a + b) / 2.0 + Vector3(0, 0.5, 0), Color(0.75, 0.73, 0.68), true)
+	var paint := _pbr("weathered_plank_siding", 2.0, Color(0.92, 0.9, 0.86))
+	var length := a.distance_to(b)
+	var dir := (b - a).normalized()
+	var along_x := absf(dir.x) > 0.5
+	_solid(Vector3(length if along_x else 0.1, 1.0, 0.1 if along_x else length), (a + b) / 2.0 + Vector3(0, 0.5, 0))
+	for y in [0.3, 0.75]:
+		_box(self, Vector3(length if along_x else 0.04, 0.07, 0.04 if along_x else length), (a + b) / 2.0 + Vector3(0, y, 0), paint, false)
+	var picket := BoxMesh.new()
+	picket.size = Vector3(0.08, 1.0, 0.025) if along_x else Vector3(0.025, 1.0, 0.08)
+	picket.material = paint
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = int(length / 0.14)
+	mm.mesh = picket
+	for i in mm.instance_count:
+		mm.set_instance_transform(i, Transform3D(Basis(), a + dir * (i * 0.14 + 0.07) + Vector3(0, 0.5, 0)))
+	var inst := MultiMeshInstance3D.new()
+	inst.multimesh = mm
+	add_child(inst)
 
 
+## Baum: Stamm und eine unregelmäßige Krone aus mehreren Laubkugeln.
 func _tree(pos: Vector3) -> void:
 	var trunk_node := CSGCylinder3D.new()
 	trunk_node.radius = 0.2
-	trunk_node.height = 3.0
-	trunk_node.position = pos + Vector3(0, 1.5, 0)
+	trunk_node.height = 3.4
+	trunk_node.position = pos + Vector3(0, 1.7, 0)
 	trunk_node.material = surf.bark
 	trunk_node.use_collision = true
 	add_child(trunk_node)
-	var crown := CSGSphere3D.new()
-	crown.radius = 1.8
-	crown.position = pos + Vector3(0, 3.8, 0)
-	crown.material = surf.hedge
-	add_child(crown)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(pos.x * 31.0 + pos.z * 17.0)
+	for _i in 7:
+		var crown := CSGSphere3D.new()
+		crown.radius = rng.randf_range(0.9, 1.5)
+		crown.radial_segments = 16
+		crown.rings = 10
+		crown.position = pos + Vector3(rng.randf_range(-1.2, 1.2), rng.randf_range(3.4, 5.0), rng.randf_range(-1.2, 1.2))
+		crown.material = surf.hedge
+		add_child(crown)
+
+
+## Dichtes Gras auf den Rasenflächen: das CC0-Grasbüschel als MultiMesh.
+func _grass_field(count: int) -> void:
+	var scene: Node3D = load("res://assets/models/grass_medium_01/grass_medium_01_1k.gltf").instantiate()
+	var source: MeshInstance3D = scene.find_children("*", "MeshInstance3D", true, false)[0]
+	var mesh: Mesh = source.mesh
+	var base_scale := 0.35 / maxf(mesh.get_aabb().size.y, 0.001)
+	scene.free()
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = count
+	mm.mesh = mesh
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2024
+	var i := 0
+	while i < count:
+		var p := Vector3(rng.randf_range(-40, 48), 0, rng.randf_range(-12, 48))
+		if _inside_house(p) or _on_pavement(p):
+			continue
+		var s := base_scale * rng.randf_range(0.7, 1.4)
+		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), p))
+		i += 1
+	var inst := MultiMeshInstance3D.new()
+	inst.multimesh = mm
+	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(inst)
+
+
+## Straße, Gehwege, Einfahrten und Wege, auf denen kein Gras wächst.
+func _on_pavement(p: Vector3) -> bool:
+	if p.z > 15.8 and p.z < 24.2:
+		return true
+	if absf(p.x + 4.0) < 1.7 and p.z > 4.5 or absf(p.x) < 0.9 and p.z > 4.5:
+		return true
+	for x0 in [-16.0, 16.0, 32.0]:
+		if absf(p.x - (x0 - 6.5)) < 1.7 and p.z < 16.0:
+			return true
+	for x0 in [-25.0, -9.0, 7.0, 23.0]:
+		if absf(p.x - (x0 + 6.5)) < 1.7 and p.z > 24.0:
+			return true
+	return false
 
 
 # --- Hilfsfunktionen ------------------------------------------------------

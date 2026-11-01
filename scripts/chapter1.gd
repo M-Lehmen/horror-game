@@ -40,6 +40,7 @@ var walter: Node3D
 var harriet: Node3D
 var dark_car: Node3D
 var driver_head: Node3D
+var surf := {}
 
 var boxes_left := BOX_COUNT
 var boxes_placed := 0
@@ -412,10 +413,26 @@ func _build_environment() -> void:
 	post_layer.add_child(post)
 
 
+## Prozedurale Oberflächen, bis echte CC0-Texturen da sind.
+func _make_surfaces() -> void:
+	surf = {
+		"grass": _surface(Color(0.22, 0.29, 0.16), Vector3.ONE * 0.25, 4.0, 0.05),
+		"asphalt": _surface(Color(0.14, 0.14, 0.15), Vector3.ONE * 0.5, 2.0, 0.2),
+		"concrete": _surface(Color(0.48, 0.48, 0.46), Vector3.ONE * 0.5, 1.5, 0.08),
+		"siding": _surface(Color(0.6, 0.57, 0.5), Vector3(0.01, 0.25, 0.01), 3.0, 0.04, FastNoiseLite.TYPE_VALUE),
+		"roof": _surface(Color(0.24, 0.21, 0.2), Vector3(0.3, 0.6, 0.3), 5.0, 0.08, FastNoiseLite.TYPE_CELLULAR),
+		"wood": _surface(Color(0.36, 0.26, 0.17), Vector3(0.03, 0.3, 0.3), 2.0, 0.04, FastNoiseLite.TYPE_VALUE),
+		"hedge": _surface(Color(0.1, 0.19, 0.08), Vector3.ONE * 0.6, 8.0, 0.1, FastNoiseLite.TYPE_CELLULAR),
+		"bark": _surface(Color(0.24, 0.18, 0.13), Vector3(0.6, 0.05, 0.6), 6.0, 0.06),
+		"soil": _surface(Color(0.17, 0.12, 0.09), Vector3.ONE * 0.8, 5.0, 0.12),
+	}
+
+
 func _build_world() -> void:
-	var grass := Color(0.22, 0.3, 0.18)
-	var asphalt := Color(0.12, 0.12, 0.13)
-	var concrete := Color(0.45, 0.45, 0.43)
+	_make_surfaces()
+	var grass: Material = surf.grass
+	var asphalt: Material = surf.asphalt
+	var concrete: Material = surf.concrete
 
 	# Boden, Straße, Gehwege, Einfahrt
 	_box(self, Vector3(120, 1, 120), Vector3(5, -0.5, 15), grass, true)
@@ -495,7 +512,7 @@ func _build_neighborhood() -> void:
 	_neighbor_house(23, 36, Color(0.45, 0.41, 0.4), true, true)
 
 	# Hecke vor dem Haus des Beobachters, Einfahrt daneben bleibt frei
-	_box(self, Vector3(12, 1.6, 1), Vector3(6, 0.8, 24.5), Color(0.1, 0.2, 0.08), true)
+	_box(self, Vector3(12, 1.6, 1), Vector3(6, 0.8, 24.5), surf.hedge, true)
 
 	# Zäune
 	_fence(Vector3(-7.5, 0, -5), Vector3(-7.5, 0, 15.5))
@@ -529,7 +546,7 @@ func _build_neighborhood() -> void:
 
 
 func _build_house() -> void:
-	var wall := Color(0.55, 0.52, 0.47)
+	var wall: Material = surf.siding
 	var ground := CSGCombiner3D.new()
 	ground.use_collision = true
 	add_child(ground)
@@ -545,7 +562,10 @@ func _build_house() -> void:
 	_box(ground, Vector3(11.6, 2.8, 0.15), Vector3(0, 1.4, 0), wall, false) # Innenwand
 	_sub(ground, Vector3(1.2, 2.2, 0.4), Vector3(2.5, 1.1, 0), wall)       # Durchgang Küche
 
-	_box(self, Vector3(11.6, 0.02, 9.6), Vector3(0, 0.01, 0), Color(0.3, 0.22, 0.15), false)
+	_box(self, Vector3(11.6, 0.02, 9.6), Vector3(0, 0.01, 0), surf.wood, false)
+	# Dielen oben, ohne das Treppenloch (x -5,8 bis -0,5, z -4,7 bis -3,3)
+	_box(self, Vector3(11.6, 0.02, 8.1), Vector3(0, 3.01, 0.75), surf.wood, false)
+	_box(self, Vector3(6.3, 0.02, 1.5), Vector3(2.65, 3.01, -4.05), surf.wood, false)
 
 	# Obergeschoss, begehbar: Boden auf y = 3
 	var upper := CSGCombiner3D.new()
@@ -559,7 +579,7 @@ func _build_house() -> void:
 	_box(upper, Vector3(11.6, 2.8, 0.15), Vector3(0, 4.4, 0), wall, false) # Innenwand
 	_sub(upper, Vector3(1.2, 2.2, 0.4), Vector3(-4.0, 4.1, 0), wall)       # Tür Kinderzimmer
 
-	var roof := Color(0.25, 0.2, 0.2)
+	var roof: Material = surf.roof
 	var front := _box(self, Vector3(12.8, 0.2, 6.4), Vector3(0, 7.65, 2.5), roof, false)
 	front.rotation.x = deg_to_rad(35)
 	var back := _box(self, Vector3(12.8, 0.2, 6.4), Vector3(0, 7.65, -2.5), roof, false)
@@ -641,8 +661,8 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	h.rotation.y = PI if flipped else 0.0
 	add_child(h)
 	var sidewalk := 12.0 if flipped else 16.0  # Abstand Hausmitte bis Gehweg
-	_box(h, Vector3(10, 5.5, 8), Vector3(0, 2.75, 0), color, true)
-	var roof := Color(0.22, 0.18, 0.18)
+	_box(h, Vector3(10, 5.5, 8), Vector3(0, 2.75, 0), _surface(color, Vector3.ONE * 0.4, 2.0, 0.06), true)
+	var roof: Material = surf.roof
 	var front := _box(h, Vector3(10.6, 0.2, 5.2), Vector3(0, 7.0, 2.1), roof, false)
 	front.rotation.x = deg_to_rad(35)
 	var back := _box(h, Vector3(10.6, 0.2, 5.2), Vector3(0, 7.0, -2.1), roof, false)
@@ -652,7 +672,7 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 		for wy in [1.6, 4.1]:
 			_box(h, Vector3(1.4, 1.1, 0.06), Vector3(wx, wy, 4.02), Color(0.08, 0.09, 0.11), false)
 	_box(h, Vector3(4, 0.04, 2), Vector3(0, 0.02, 5), Color(0.35, 0.27, 0.2), false)
-	_box(h, Vector3(3, 0.02, sidewalk + 9), Vector3(-6.5, 0.012, (sidewalk - 9) / 2.0), Color(0.45, 0.45, 0.43), false)
+	_box(h, Vector3(3, 0.02, sidewalk + 9), Vector3(-6.5, 0.012, (sidewalk - 9) / 2.0), surf.concrete, false)
 	if with_mailbox:
 		_box(h, Vector3(0.1, 1.0, 0.1), Vector3(2.5, 0.5, sidewalk - 0.3), Color(0.15, 0.15, 0.15), false)
 		_box(h, Vector3(0.35, 0.3, 0.5), Vector3(2.5, 1.15, sidewalk - 0.3), Color(0.2, 0.2, 0.22), false)
@@ -717,13 +737,13 @@ func _tree(pos: Vector3) -> void:
 	trunk_node.radius = 0.2
 	trunk_node.height = 3.0
 	trunk_node.position = pos + Vector3(0, 1.5, 0)
-	trunk_node.material = _mat(Color(0.25, 0.18, 0.12))
+	trunk_node.material = surf.bark
 	trunk_node.use_collision = true
 	add_child(trunk_node)
 	var crown := CSGSphere3D.new()
 	crown.radius = 1.8
 	crown.position = pos + Vector3(0, 3.8, 0)
-	crown.material = _mat(Color(0.12, 0.22, 0.1))
+	crown.material = surf.hedge
 	add_child(crown)
 
 
@@ -738,32 +758,68 @@ func _mat(color: Color) -> StandardMaterial3D:
 	return m
 
 
-func _box(parent: Node, size: Vector3, pos: Vector3, color: Color, collide: bool) -> CSGBox3D:
+## Prozedurale Oberfläche: Rauschen als Farbvariation und Normal-Map, weltbezogen triplanar.
+## scale streckt das Muster (z. B. flach und breit für Bretter), freq bestimmt die Körnung.
+func _surface(color: Color, scale: Vector3, bump: float, freq: float = 0.04,
+		noise_type: FastNoiseLite.NoiseType = FastNoiseLite.TYPE_SIMPLEX_SMOOTH) -> StandardMaterial3D:
+	var noise := FastNoiseLite.new()
+	noise.noise_type = noise_type
+	noise.frequency = freq
+	noise.fractal_octaves = 5
+	var ramp := Gradient.new()
+	ramp.set_color(0, color.darkened(0.3))
+	ramp.set_color(1, color.lightened(0.12))
+	var albedo := NoiseTexture2D.new()
+	albedo.noise = noise
+	albedo.seamless = true
+	albedo.color_ramp = ramp
+	var normal := NoiseTexture2D.new()
+	normal.noise = noise
+	normal.seamless = true
+	normal.as_normal_map = true
+	normal.bump_strength = bump
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = albedo
+	m.normal_enabled = true
+	m.normal_texture = normal
+	m.roughness = 0.95
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = scale
+	return m
+
+
+func _look(look: Variant) -> Material:
+	return look if look is Material else _mat(look)
+
+
+## look: Farbe oder fertiges Material.
+func _box(parent: Node, size: Vector3, pos: Vector3, look: Variant, collide: bool) -> CSGBox3D:
 	var b := CSGBox3D.new()
 	b.size = size
 	b.position = pos
-	b.material = _mat(color)
+	b.material = _look(look)
 	b.use_collision = collide
 	parent.add_child(b)
 	return b
 
 
-func _cyl(parent: Node, radius: float, height: float, pos: Vector3, color: Color, collide: bool = false) -> CSGCylinder3D:
+func _cyl(parent: Node, radius: float, height: float, pos: Vector3, look: Variant, collide: bool = false) -> CSGCylinder3D:
 	var c := CSGCylinder3D.new()
 	c.radius = radius
 	c.height = height
 	c.position = pos
-	c.material = _mat(color)
+	c.material = _look(look)
 	c.use_collision = collide
 	parent.add_child(c)
 	return c
 
 
-func _sub(parent: Node, size: Vector3, pos: Vector3, color: Color) -> void:
+func _sub(parent: Node, size: Vector3, pos: Vector3, look: Variant) -> void:
 	var b := CSGBox3D.new()
 	b.size = size
 	b.position = pos
-	b.material = _mat(color)
+	b.material = _look(look)
 	b.operation = CSGShape3D.OPERATION_SUBTRACTION
 	parent.add_child(b)
 

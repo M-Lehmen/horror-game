@@ -426,6 +426,18 @@ func _make_surfaces() -> void:
 		"bark": _surface(Color(0.24, 0.18, 0.13), Vector3(0.6, 0.05, 0.6), 6.0, 0.06),
 		"soil": _surface(Color(0.17, 0.12, 0.09), Vector3.ONE * 0.8, 5.0, 0.12),
 	}
+	var lit := StandardMaterial3D.new()
+	lit.albedo_color = Color(0.3, 0.25, 0.15)
+	lit.emission_enabled = true
+	lit.emission = Color(1.0, 0.72, 0.42)
+	lit.emission_energy_multiplier = 1.4
+	surf.lit_window = lit
+	var shade := StandardMaterial3D.new()
+	shade.albedo_color = Color(0.9, 0.85, 0.7)
+	shade.emission_enabled = true
+	shade.emission = Color(1.0, 0.8, 0.55)
+	shade.emission_energy_multiplier = 0.6
+	surf.lamp_shade = shade
 
 
 func _build_world() -> void:
@@ -544,6 +556,154 @@ func _build_neighborhood() -> void:
 	# Harriet Price steht in ihrem Vorgarten gegenüber
 	harriet = _person(Vector3(-9, 0, 29), Color(0.45, 0.3, 0.4), Color(0.8, 0.68, 0.6))
 
+	_build_decor()
+
+
+## Vorgärten und Straße: Büsche, Beete, Mülltonnen, Hydranten, Schilder, Fahrrad, Gartenmöbel, Laub.
+func _build_decor() -> void:
+	for x0 in [-16.0, 16.0, 32.0]:
+		for dx in [-3.5, 3.5]:
+			_bush(Vector3(x0 + dx, 0, 4.7), 0.7)
+	for x0 in [-25.0, -9.0, 7.0, 23.0]:
+		for dx in [-3.5, 3.5]:
+			_bush(Vector3(x0 + dx, 0, 31.3), 0.7)
+	for x in [4.0, 5.3]:
+		_bush(Vector3(x, 0, 5.5), 0.55)
+	_flower_bed(Vector3(-12, 0, 28.6), Vector2(3, 0.9))
+	_flower_bed(Vector3(12.3, 0, 6.5), Vector2(2, 0.8))
+
+	var bin_mat := _surface(Color(0.13, 0.2, 0.15), Vector3.ONE, 1.0, 0.2)
+	for p in [Vector3(-6.3, 0, 15.2), Vector3(-24.8, 0, 15.2), Vector3(11.6, 0, 15.2), Vector3(27.6, 0, 15.2),
+			Vector3(-0.5, 0, 24.6), Vector3(-16.4, 0, 24.6), Vector3(31.6, 0, 24.6)]:
+		_box(self, Vector3(0.6, 1.0, 0.7), p + Vector3(0, 0.5, 0), bin_mat, true)
+		_box(self, Vector3(0.66, 0.06, 0.76), p + Vector3(0, 1.03, 0), Color(0.08, 0.12, 0.09), false)
+
+	for p in [Vector3(-12, 0, 16.3), Vector3(26, 0, 23.7)]:
+		_cyl(self, 0.13, 0.55, p + Vector3(0, 0.275, 0), Color(0.6, 0.08, 0.06), true)
+		_box(self, Vector3(0.42, 0.08, 0.08), p + Vector3(0, 0.4, 0), Color(0.55, 0.07, 0.05), false)
+		var cap := CSGSphere3D.new()
+		cap.radius = 0.14
+		cap.position = p + Vector3(0, 0.56, 0)
+		cap.material = _mat(Color(0.6, 0.08, 0.06))
+		add_child(cap)
+
+	_sign(Vector3(12, 0, 16.3), "SPEED\nLIMIT\n25", Color(0.9, 0.9, 0.88))
+	_sign(Vector3(-36, 0, 23.7), "NEIGHBORHOOD\nWATCH", Color(0.85, 0.75, 0.2))
+	_bike(Vector3(19.6, 0, 5.3))
+	_garden_set(Vector3(-27, 0, 28.5))
+	_leaves(1600)
+
+
+func _bush(pos: Vector3, r: float) -> void:
+	var parts := [[Vector3(0, r * 0.8, 0), r], [Vector3(r * 0.6, r * 0.6, r * 0.3), r * 0.75],
+			[Vector3(-r * 0.6, r * 0.6, -r * 0.2), r * 0.8]]
+	for part in parts:
+		var s := CSGSphere3D.new()
+		s.position = pos + part[0]
+		s.radius = part[1]
+		s.material = surf.hedge
+		add_child(s)
+
+
+func _flower_bed(pos: Vector3, size: Vector2) -> void:
+	_box(self, Vector3(size.x, 0.12, size.y), pos + Vector3(0, 0.06, 0), surf.soil, false)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(pos.x * 100.0)
+	var colors := [Color(0.7, 0.1, 0.12), Color(0.85, 0.75, 0.2), Color(0.85, 0.85, 0.8), Color(0.45, 0.25, 0.6)]
+	for _i in 16:
+		var f := CSGSphere3D.new()
+		f.radius = 0.07
+		f.position = pos + Vector3(rng.randf_range(-0.45, 0.45) * size.x, 0.2, rng.randf_range(-0.4, 0.4) * size.y)
+		f.material = _mat(colors[rng.randi() % colors.size()])
+		add_child(f)
+
+
+## Schild an einem Pfahl, Schrift auf beiden Seiten lesbar.
+func _sign(pos: Vector3, text: String, color: Color) -> void:
+	_cyl(self, 0.04, 2.4, pos + Vector3(0, 1.2, 0), Color(0.45, 0.45, 0.45), true)
+	_box(self, Vector3(0.62, 0.78, 0.03), pos + Vector3(0, 2.2, 0), color, false)
+	for side in [1.0, -1.0]:
+		var label := Label3D.new()
+		label.text = text
+		label.font_size = 40
+		label.pixel_size = 0.0035
+		label.modulate = Color(0.05, 0.05, 0.05)
+		label.outline_size = 0
+		label.double_sided = false
+		label.position = pos + Vector3(0, 2.2, 0.02 * side)
+		label.rotation.y = 0.0 if side > 0.0 else PI
+		add_child(label)
+
+
+func _bike(pos: Vector3) -> void:
+	var frame := Color(0.45, 0.08, 0.07)
+	for dx in [-0.5, 0.5]:
+		var wheel := CSGTorus3D.new()
+		wheel.inner_radius = 0.27
+		wheel.outer_radius = 0.32
+		wheel.rotation.x = PI / 2
+		wheel.position = pos + Vector3(dx, 0.32, 0)
+		wheel.material = _mat(Color(0.05, 0.05, 0.05))
+		add_child(wheel)
+	_box(self, Vector3(0.75, 0.04, 0.04), pos + Vector3(0, 0.7, 0), frame, false)
+	var down := _box(self, Vector3(0.7, 0.04, 0.04), pos + Vector3(0.05, 0.5, 0), frame, false)
+	down.rotation.z = 0.6
+	_box(self, Vector3(0.22, 0.05, 0.1), pos + Vector3(-0.3, 0.85, 0), Color(0.05, 0.05, 0.05), false)
+	_box(self, Vector3(0.04, 0.04, 0.45), pos + Vector3(0.42, 0.9, 0), Color(0.3, 0.3, 0.3), false)
+
+
+func _garden_set(pos: Vector3) -> void:
+	var plastic := Color(0.85, 0.85, 0.82)
+	_box(self, Vector3(1.0, 0.05, 1.0), pos + Vector3(0, 0.72, 0), plastic, true)
+	_cyl(self, 0.05, 0.7, pos + Vector3(0, 0.35, 0), plastic)
+	for dx in [-0.9, 0.9]:
+		_box(self, Vector3(0.45, 0.05, 0.45), pos + Vector3(dx, 0.45, 0), plastic, true)
+		_box(self, Vector3(0.05, 0.5, 0.45), pos + Vector3(dx * 1.25, 0.72, 0), plastic, false)
+
+
+## Herbstlaub als MultiMesh: viele kleine flache Blätter, nicht in Häusern.
+func _leaves(count: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1987
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.roughness = 1.0
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.14, 0.1)
+	quad.material = mat
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.instance_count = count
+	mm.mesh = quad
+	var colors := [Color(0.45, 0.25, 0.08), Color(0.55, 0.35, 0.1), Color(0.35, 0.2, 0.1), Color(0.5, 0.42, 0.15)]
+	var i := 0
+	while i < count:
+		var pos := Vector3(rng.randf_range(-40, 48), 0.04, rng.randf_range(-10, 48))
+		if _inside_house(pos):
+			continue
+		var rot := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, -PI / 2)
+		mm.set_instance_transform(i, Transform3D(rot, pos))
+		mm.set_instance_color(i, colors[rng.randi() % colors.size()])
+		i += 1
+	var inst := MultiMeshInstance3D.new()
+	inst.multimesh = mm
+	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(inst)
+
+
+func _inside_house(p: Vector3) -> bool:
+	var rects := [Vector4(0, 0, 6.2, 5.2)]  # x, z, halbe Breite, halbe Tiefe
+	for x0 in [-16.0, 16.0, 32.0]:
+		rects.append(Vector4(x0, 0, 5.2, 4.2))
+	for x0 in [-25.0, -9.0, 7.0, 23.0]:
+		rects.append(Vector4(x0, 36, 5.2, 4.2))
+	for r in rects:
+		if absf(p.x - r.x) < r.z and absf(p.z - r.y) < r.w:
+			return true
+	return false
+
 
 func _build_house() -> void:
 	var wall: Material = surf.siding
@@ -618,6 +778,56 @@ func _build_house() -> void:
 		lamp.light_energy = l[1]
 		lamp.omni_range = 7.0
 		add_child(lamp)
+		_cyl(self, 0.18, 0.12, l[0] + Vector3(0, 0.2, 0), surf.lamp_shade)
+
+	_build_interior()
+
+
+## Möbel und Kleinkram im Haus.
+func _build_interior() -> void:
+	var fabric := _surface(Color(0.3, 0.29, 0.34), Vector3.ONE * 3.0, 1.5, 0.3)
+	var wood: Material = surf.wood
+
+	# Wohnzimmer: Sofa an der Innenwand, Couchtisch, Stehlampe, Regal, Bilder
+	_box(self, Vector3(2.0, 0.42, 0.85), Vector3(-4.4, 0.21, 0.6), fabric, true)
+	_box(self, Vector3(2.0, 0.5, 0.2), Vector3(-4.4, 0.67, 0.27), fabric, false)
+	for dx in [-1.0, 1.0]:
+		_box(self, Vector3(0.18, 0.6, 0.85), Vector3(-4.4 + dx, 0.3, 0.6), fabric, false)
+	_box(self, Vector3(1.0, 0.05, 0.55), Vector3(-4.5, 0.42, 1.9), wood, true)
+	for dx in [-0.45, 0.45]:
+		for dz in [-0.22, 0.22]:
+			_cyl(self, 0.025, 0.4, Vector3(-4.5 + dx, 0.2, 1.9 + dz), wood)
+	_cyl(self, 0.02, 1.5, Vector3(-5.5, 0.75, 1.4), Color(0.1, 0.1, 0.1))
+	_cyl(self, 0.2, 0.3, Vector3(-5.5, 1.6, 1.4), surf.lamp_shade)
+	var floor_lamp := OmniLight3D.new()
+	floor_lamp.position = Vector3(-5.5, 1.5, 1.4)
+	floor_lamp.light_color = Color(1.0, 0.78, 0.5)
+	floor_lamp.light_energy = 0.5
+	floor_lamp.omni_range = 4.0
+	add_child(floor_lamp)
+	_box(self, Vector3(0.35, 1.8, 1.2), Vector3(5.6, 0.9, 3.5), wood, true)
+	for pic in [[Vector3(1.2, 1.6, 0.09), Vector3(1.2, 1.6, 0.1), 0.0, Color(0.35, 0.4, 0.38)],
+			[Vector3(-5.785, 1.6, 3.2), Vector3(-5.78, 1.6, 3.2), PI / 2, Color(0.42, 0.36, 0.3)]]:
+		var frame := _box(self, Vector3(0.6, 0.45, 0.03), pic[0], Color(0.2, 0.13, 0.08), false)
+		frame.rotation.y = pic[2]
+		var canvas := _box(self, Vector3(0.5, 0.35, 0.035), pic[1], pic[3], false)
+		canvas.rotation.y = pic[2]
+
+	# Küche: Kühlschrank, Hängeschrank, Tisch mit zwei Stühlen
+	_box(self, Vector3(0.7, 1.8, 0.7), Vector3(5.35, 0.9, -4.3), Color(0.82, 0.82, 0.78), true)
+	_box(self, Vector3(0.4, 0.7, 2.0), Vector3(5.6, 2.0, -2.0), wood, false)
+	_box(self, Vector3(1.2, 0.05, 0.8), Vector3(2.8, 0.75, -2.2), wood, true)
+	_cyl(self, 0.06, 0.72, Vector3(2.8, 0.36, -2.2), wood)
+	for dz in [-0.65, 0.65]:
+		_box(self, Vector3(0.42, 0.04, 0.42), Vector3(2.8, 0.45, -2.2 + dz), wood, true)
+		_box(self, Vector3(0.42, 0.5, 0.04), Vector3(2.8, 0.72, -2.2 + dz * 1.32), wood, false)
+
+	# Kinderzimmer: Teppich, Schreibtisch, Spielzeugkiste; Kartons im Flur oben
+	_box(self, Vector3(1.6, 0.02, 1.2), Vector3(2.4, 3.03, 2.3), _surface(Color(0.45, 0.35, 0.55), Vector3.ONE * 2.0, 1.0, 0.3), false)
+	_box(self, Vector3(1.0, 0.75, 0.5), Vector3(1.0, 3.375, 4.4), wood, true)
+	_box(self, Vector3(0.6, 0.4, 0.4), Vector3(-1.5, 3.2, 4.3), Color(0.7, 0.25, 0.2), true)
+	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.25, -2.5), CARDBOARD, true)
+	_box(self, Vector3(0.6, 0.5, 0.5), Vector3(3.5, 3.75, -2.5), CARDBOARD, true)
 
 
 ## Treppe an der Rückwand: sichtbare Stufen, Kollision ist eine glatte Rampe
@@ -670,7 +880,9 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	_box(h, Vector3(1.1, 2.1, 0.06), Vector3(0, 1.05, 4.02), Color(0.2, 0.14, 0.1), false)
 	for wx in [-3.0, 3.0]:
 		for wy in [1.6, 4.1]:
-			_box(h, Vector3(1.4, 1.1, 0.06), Vector3(wx, wy, 4.02), Color(0.08, 0.09, 0.11), false)
+			# Ein Fenster pro Haus ist von innen beleuchtet.
+			var pane: Variant = surf.lit_window if wx > 0.0 and wy < 2.0 else Color(0.08, 0.09, 0.11)
+			_box(h, Vector3(1.4, 1.1, 0.06), Vector3(wx, wy, 4.02), pane, false)
 	_box(h, Vector3(4, 0.04, 2), Vector3(0, 0.02, 5), Color(0.35, 0.27, 0.2), false)
 	_box(h, Vector3(3, 0.02, sidewalk + 9), Vector3(-6.5, 0.012, (sidewalk - 9) / 2.0), surf.concrete, false)
 	if with_mailbox:

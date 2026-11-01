@@ -572,25 +572,49 @@ func _build_decor() -> void:
 	_flower_bed(Vector3(-12, 0, 28.6), Vector2(3, 0.9))
 	_flower_bed(Vector3(12.3, 0, 6.5), Vector2(2, 0.8))
 
-	var bin_mat := _surface(Color(0.13, 0.2, 0.15), Vector3.ONE, 1.0, 0.2)
-	for p in [Vector3(-6.3, 0, 15.2), Vector3(-24.8, 0, 15.2), Vector3(11.6, 0, 15.2), Vector3(27.6, 0, 15.2),
-			Vector3(-0.5, 0, 24.6), Vector3(-16.4, 0, 24.6), Vector3(31.6, 0, 24.6)]:
-		_box(self, Vector3(0.6, 1.0, 0.7), p + Vector3(0, 0.5, 0), bin_mat, true)
-		_box(self, Vector3(0.66, 0.06, 0.76), p + Vector3(0, 1.03, 0), Color(0.08, 0.12, 0.09), false)
+	const M := "res://assets/models/%s/%s_1k.gltf"
+	var bins := [Vector3(-6.3, 0, 15.2), Vector3(-24.8, 0, 15.2), Vector3(11.6, 0, 15.2), Vector3(27.6, 0, 15.2),
+			Vector3(-0.5, 0, 24.6), Vector3(-16.4, 0, 24.6), Vector3(31.6, 0, 24.6)]
+	for i in bins.size():
+		var p: Vector3 = bins[i]
+		_model(M % ["metal_trash_can", "metal_trash_can"], p, 1.0, i * 1.3)
+		_solid(Vector3(0.6, 1.0, 0.6), p + Vector3(0, 0.5, 0))
+		if i % 2 == 0:
+			_model(M % ["trashbag", "trashbag"], p + Vector3(0.55, 0, 0.1), 0.5, i)
 
 	for p in [Vector3(-12, 0, 16.3), Vector3(26, 0, 23.7)]:
-		_cyl(self, 0.13, 0.55, p + Vector3(0, 0.275, 0), Color(0.6, 0.08, 0.06), true)
-		_box(self, Vector3(0.42, 0.08, 0.08), p + Vector3(0, 0.4, 0), Color(0.55, 0.07, 0.05), false)
-		var cap := CSGSphere3D.new()
-		cap.radius = 0.14
-		cap.position = p + Vector3(0, 0.56, 0)
-		cap.material = _mat(Color(0.6, 0.08, 0.06))
-		add_child(cap)
+		_model(M % ["fire_hydrant", "fire_hydrant"], p, 0.75)
+		_solid(Vector3(0.35, 0.75, 0.35), p + Vector3(0, 0.375, 0))
 
 	_sign(Vector3(12, 0, 16.3), "SPEED\nLIMIT\n25", Color(0.9, 0.9, 0.88))
 	_sign(Vector3(-36, 0, 23.7), "NEIGHBORHOOD\nWATCH", Color(0.85, 0.75, 0.2))
 	_bike(Vector3(19.6, 0, 5.3))
-	_garden_set(Vector3(-27, 0, 28.5))
+
+	# Gartenmöbel, Bank, Zwerg, Pflanzen auf den Veranden
+	_model(M % ["outdoor_table_chair_set_01", "outdoor_table_chair_set_01"], Vector3(-27, 0, 28.5), 0.9)
+	_solid(Vector3(1.8, 0.9, 1.8), Vector3(-27, 0.45, 28.5))
+	_model(M % ["painted_wooden_bench", "painted_wooden_bench"], Vector3(-19.5, 0.04, 5.3), 0.9)
+	_solid(Vector3(1.5, 0.9, 0.6), Vector3(-19.5, 0.45, 5.3))
+	_model(M % ["garden_gnome", "garden_gnome"], Vector3(-11, 0, 27.5), 0.4, PI)
+	_model(M % ["tree_stump_01", "tree_stump_01"], Vector3(5, 0, 12), 0.45)
+	_model(M % ["planter_box_01", "planter_box_01"], Vector3(2.4, 0.04, 7.5), 0.5)
+	for p in [Vector3(-14.3, 0.04, 5.4), Vector3(17.6, 0.04, 5.4), Vector3(-7.4, 0.04, 30.6), Vector3(-23.4, 0.04, 30.6)]:
+		_model(M % ["potted_plant_02", "potted_plant_02"], p, 0.8, p.x)
+
+	# Abgedecktes Auto in der Einfahrt von Haus 32
+	_model(M % ["covered_car", "covered_car"], Vector3(25.5, 0, 10), 1.5)
+	_solid(Vector3(1.9, 1.5, 4.4), Vector3(25.5, 0.75, 10))
+
+	# Gras- und Farnbüschel an Zäunen und Hausfronten
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 112
+	for _i in 60:
+		var spot := Vector3(rng.randf_range(-38, 46), 0, rng.randf_range(-6, 46))
+		if _inside_house(spot) or (spot.z > 16.0 and spot.z < 24.0):
+			continue  # nicht in Häusern, nicht auf Straße und Gehweg
+		var kind := "fern_02" if rng.randf() < 0.3 else "grass_medium_01"
+		_model(M % [kind, kind], spot, rng.randf_range(0.3, 0.6), rng.randf() * TAU)
+
 	_leaves(1600)
 
 
@@ -644,15 +668,6 @@ func _bike(pos: Vector3) -> void:
 	down.rotation.z = 0.6
 	_box(self, Vector3(0.22, 0.05, 0.1), pos + Vector3(-0.3, 0.85, 0), Color(0.05, 0.05, 0.05), false)
 	_box(self, Vector3(0.04, 0.04, 0.45), pos + Vector3(0.42, 0.9, 0), Color(0.3, 0.3, 0.3), false)
-
-
-func _garden_set(pos: Vector3) -> void:
-	var plastic := Color(0.85, 0.85, 0.82)
-	_box(self, Vector3(1.0, 0.05, 1.0), pos + Vector3(0, 0.72, 0), plastic, true)
-	_cyl(self, 0.05, 0.7, pos + Vector3(0, 0.35, 0), plastic)
-	for dx in [-0.9, 0.9]:
-		_box(self, Vector3(0.45, 0.05, 0.45), pos + Vector3(dx, 0.45, 0), plastic, true)
-		_box(self, Vector3(0.05, 0.5, 0.45), pos + Vector3(dx * 1.25, 0.72, 0), plastic, false)
 
 
 ## Herbstlaub als MultiMesh: viele kleine flache Blätter, nicht in Häusern.
@@ -758,8 +773,7 @@ func _build_house() -> void:
 	var cellar = _interactable(Vector3(4.0, 1.05, -4.74), Vector3(1.0, 2.1, 0.1), Color(0.3, 0.22, 0.16), "PROMPT_DOOR")
 	cellar.used.connect(_on_cellar_used)
 
-	# Kinderzimmer oben: Bett und Bleistiftstriche an der Wand
-	_box(self, Vector3(1.0, 0.45, 2.0), Vector3(4.5, 3.225, 2.0), Color(0.6, 0.55, 0.7), true)
+	# Kinderzimmer oben: Bleistiftstriche an der Wand
 	var marks = _interactable(Vector3(-3.0, 4.0, 0.12), Vector3(0.25, 1.0, 0.06), Color(0.8, 0.78, 0.7), "PROMPT_LOOK")
 	marks.used.connect(_on_kidsroom_used)
 
@@ -796,24 +810,34 @@ func _build_interior() -> void:
 	floor_lamp.light_energy = 0.5
 	floor_lamp.omni_range = 4.0
 	add_child(floor_lamp)
-	_box(self, Vector3(0.35, 1.8, 1.2), Vector3(5.6, 0.9, 3.5), wood, true)
-	for pic in [[Vector3(1.2, 1.6, 0.09), Vector3(1.2, 1.6, 0.1), 0.0, Color(0.35, 0.4, 0.38)],
-			[Vector3(-5.785, 1.6, 3.2), Vector3(-5.78, 1.6, 3.2), PI / 2, Color(0.42, 0.36, 0.3)]]:
-		var frame := _box(self, Vector3(0.6, 0.45, 0.03), pic[0], Color(0.2, 0.13, 0.08), false)
-		frame.rotation.y = pic[2]
-		var canvas := _box(self, Vector3(0.5, 0.35, 0.035), pic[1], pic[3], false)
-		canvas.rotation.y = pic[2]
+	const M := "res://assets/models/%s/%s_1k.gltf"
+	_model(M % ["wooden_bookshelf_worn", "wooden_bookshelf_worn"], Vector3(5.5, 0, 3.5), 1.8, -PI / 2)
+	_solid(Vector3(0.4, 1.8, 1.2), Vector3(5.6, 0.9, 3.5))
+	_model(M % ["drawer_cabinet", "drawer_cabinet"], Vector3(3.6, 0, 0.35), 0.9)
+	_solid(Vector3(1.0, 0.9, 0.5), Vector3(3.6, 0.45, 0.35))
+	_model(M % ["Television_01", "Television_01"], Vector3(3.6, 0.9, 0.35), 0.45)
+	_model(M % ["ArmChair_01", "ArmChair_01"], Vector3(-2.0, 0, 1.0), 0.9, -PI / 2)
+	_solid(Vector3(0.8, 0.9, 0.8), Vector3(-2.0, 0.45, 1.0))
+	_model(M % ["ceramic_vase_01", "ceramic_vase_01"], Vector3(-4.5, 0.445, 1.9), 0.25)
+	_model(M % ["ceiling_fan", "ceiling_fan"], Vector3(-2.5, 2.45, 2.5), 0.35)
+	_model(M % ["hanging_picture_frame_01", "hanging_picture_frame_01"], Vector3(1.2, 1.35, 0.1), 0.5)
+	_model(M % ["hanging_picture_frame_02", "hanging_picture_frame_02"], Vector3(-5.75, 1.35, 3.2), 0.5, PI / 2)
 
-	# Küche: Kühlschrank, Hängeschrank, Tisch mit zwei Stühlen
+	# Küche: Kühlschrank, Herd, Hängeschrank, Uhr, Tisch mit zwei Stühlen
 	_box(self, Vector3(0.7, 1.8, 0.7), Vector3(5.35, 0.9, -4.3), Color(0.82, 0.82, 0.78), true)
+	_model(M % ["electric_stove", "electric_stove"], Vector3(5.4, 0, -0.6), 0.9, -PI / 2)
+	_solid(Vector3(0.65, 0.9, 0.65), Vector3(5.4, 0.45, -0.6))
 	_box(self, Vector3(0.4, 0.7, 2.0), Vector3(5.6, 2.0, -2.0), wood, false)
-	_model("res://assets/models/WoodenTable_01/WoodenTable_01_1k.gltf", Vector3(2.8, 0, -2.2), 0.77, PI / 2)
+	_model(M % ["wall_clock", "wall_clock"], Vector3(4.5, 1.8, -0.1), 0.3, PI)
+	_model(M % ["WoodenTable_01", "WoodenTable_01"], Vector3(2.8, 0, -2.2), 0.77, PI / 2)
 	_solid(Vector3(0.8, 0.77, 1.2), Vector3(2.8, 0.385, -2.2))
-	for dz in [-0.65, 0.65]:
-		_box(self, Vector3(0.42, 0.04, 0.42), Vector3(2.8, 0.45, -2.2 + dz), wood, true)
-		_box(self, Vector3(0.42, 0.5, 0.04), Vector3(2.8, 0.72, -2.2 + dz * 1.32), wood, false)
+	for side in [[-0.65, 0.0], [0.65, PI]]:
+		_model(M % ["WoodenChair_01", "WoodenChair_01"], Vector3(2.8, 0, -2.2 + side[0] * 1.1), 0.9, side[1])
+		_solid(Vector3(0.45, 0.9, 0.45), Vector3(2.8, 0.45, -2.2 + side[0] * 1.1))
 
-	# Kinderzimmer: Teppich, Schreibtisch, Spielzeugkiste; Kartons im Flur oben
+	# Kinderzimmer: Bettgestell, Teppich, Schreibtisch, Spielzeugkiste; Kartons im Flur oben
+	_model(M % ["old_bed_frame", "old_bed_frame"], Vector3(4.5, 3.0, 2.0), 0.9)
+	_solid(Vector3(1.0, 0.5, 2.0), Vector3(4.5, 3.25, 2.0))
 	_box(self, Vector3(1.6, 0.02, 1.2), Vector3(2.4, 3.03, 2.3), _surface(Color(0.45, 0.35, 0.55), Vector3.ONE * 2.0, 1.0, 0.3), false)
 	_box(self, Vector3(1.0, 0.75, 0.5), Vector3(1.0, 3.375, 4.4), wood, true)
 	_box(self, Vector3(0.6, 0.4, 0.4), Vector3(-1.5, 3.2, 4.3), Color(0.7, 0.25, 0.2), true)

@@ -1,6 +1,25 @@
 keys,en,de
 GAME_TITLE,The Observer,Der Beobachter
+HINT_CONTROLS,WASD: move · Mouse: look · E: interact · Ctrl: crouch · F2: language · Esc: free mouse,WASD: laufen · Maus: umsehen · E: interagieren · Strg: ducken · F2: Sprache · Esc: Maus freigeben
+TASK_EXPLORE,Look around the house,Sieh dich im Haus um
 TASK_GET_MAIL,Check the mail,Post holen
-LETTER_SIGNATURE,The Observer,Der Beobachter
+TASK_PORCH,Go back to the porch,Geh zurück zur Veranda
+PROMPT_MAILBOX,[E] Open mailbox,[E] Briefkasten öffnen
+PROMPT_LOOK,[E] Look,[E] Ansehen
+PROMPT_CLOSE,[E] Put the letter away,[E] Brief weglegen
+THOUGHT_ARRIVE,112 Linden Avenue. Our house. It still doesn't feel real.,Linden Avenue 112. Unser Haus. Es fühlt sich immer noch nicht echt an.
+THOUGHT_BOXES,Boxes everywhere. The move is still weeks away. I should check the mail before I leave.,"Überall Kartons. Bis zum Umzug sind es noch Wochen. Bevor ich fahre, sehe ich nach der Post."
+THOUGHT_PHOTOS,The kids' drawings. Lily packed them herself.,Die Bilder der Kinder. Lily hat sie selbst eingepackt.
+LETTER_1,"Dear new neighbors at 112 Linden Avenue,","Liebe neue Nachbarn in der Linden Avenue 112,"
+LETTER_2,allow me to welcome you to the neighborhood.,"erlauben Sie mir, Sie in der Nachbarschaft willkommen zu heißen."
+LETTER_3,"My family has watched over this house for decades. It has been my duty to wait for its second coming, and I am glad the waiting is finally over.","Meine Familie wacht seit Jahrzehnten über dieses Haus. Es war meine Aufgabe, auf seine Wiederkehr zu warten, und ich bin froh, dass das Warten endlich vorbei ist."
+LETTER_4,I see you have children. How many? I will learn their names soon. Young blood is good for an old house.,"Wie ich sehe, haben Sie Kinder. Wie viele? Ich werde ihre Namen bald kennen. Junges Blut tut einem alten Haus gut."
+LETTER_5,I will be watching.,Ich werde zusehen.
+LETTER_SIGNATURE,- The Observer,- Der Beobachter
+THOUGHT_WHO_WRITES,Who writes something like this? Typed. No sender. The postmark is from here.,Wer schreibt so etwas? Getippt. Kein Absender. Der Poststempel ist von hier.
+THOUGHT_SOMEONE_THERE,Someone is standing behind the hedge across the street.,Da steht jemand hinter der Hecke gegenüber.
+THOUGHT_GONE,Gone. Or was nobody there at all?,Weg. Oder war da nie jemand?
 THOUGHT_STREET_CAR,That car is driving way too slowly.,Der Wagen fährt viel zu langsam.
 GAME_OVER_FOLLOWED,You should not have followed.,Du hättest nicht folgen sollen.
+CHAPTER1_END,End of Chapter 1: The Key,Ende von Kapitel 1: Der Schlüssel
+DEMO_END,Thanks for playing the prototype.,Danke fürs Spielen des Prototyps.

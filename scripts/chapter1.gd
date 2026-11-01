@@ -772,6 +772,15 @@ func _build_house() -> void:
 		var p := _box(self, Vector3(1.6, 1.2, 0.02), side[0], surf.pane, false)
 		p.rotation.y = side[1]
 
+	# Giebel, Veranda mit Dach und Pfosten, Schornstein
+	for x in [-5.95, 5.95]:
+		_gable(self, Vector3(x, 5.9, 0), 5.0, 3.5, wall)
+	for x in [-2.8, 2.8]:
+		_cyl(self, 0.08, 2.5, Vector3(x, 1.25, 7.85), Color(0.88, 0.86, 0.82), true)
+	var porch_roof := _box(self, Vector3(6.4, 0.12, 3.2), Vector3(0, 2.62, 6.5), surf.roof, false)
+	porch_roof.rotation.x = 0.1
+	_box(self, Vector3(0.8, 2.6, 0.8), Vector3(3.5, 8.4, -1.5), surf.concrete, false)
+
 	var roof: Material = surf.roof
 	var front := _box(self, Vector3(12.8, 0.2, 6.4), Vector3(0, 7.65, 2.5), roof, false)
 	front.rotation.x = deg_to_rad(35)
@@ -922,6 +931,12 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	front.rotation.x = deg_to_rad(35)
 	var back := _box(h, Vector3(10.6, 0.2, 5.2), Vector3(0, 7.0, -2.1), roof, false)
 	back.rotation.x = deg_to_rad(-35)
+	for gx in [-4.95, 4.95]:
+		_gable(h, Vector3(gx, 5.5, 0), 4.0, 3.0, h.get_child(0).material)
+	for px in [-1.8, 1.8]:
+		_cyl(h, 0.07, 2.4, Vector3(px, 1.2, 5.9), Color(0.88, 0.86, 0.82), true)
+	var porch_roof := _box(h, Vector3(4.4, 0.12, 2.2), Vector3(0, 2.5, 5.0), surf.roof, false)
+	porch_roof.rotation.x = 0.1
 	_box(h, Vector3(1.1, 2.1, 0.06), Vector3(0, 1.05, 4.02), Color(0.2, 0.14, 0.1), false)
 	for wx in [-3.0, 3.0]:
 		for wy in [1.6, 4.1]:
@@ -935,6 +950,17 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	if with_mailbox:
 		_box(h, Vector3(0.1, 1.0, 0.1), Vector3(2.5, 0.5, sidewalk - 0.3), Color(0.15, 0.15, 0.15), false)
 		_box(h, Vector3(0.35, 0.3, 0.5), Vector3(2.5, 1.15, sidewalk - 0.3), Color(0.2, 0.2, 0.22), false)
+
+
+## Dreieckiger Giebel unter dem Satteldach: Grundlinie half_depth nach vorn und hinten, Spitze height darüber.
+func _gable(parent: Node, pos: Vector3, half_depth: float, height: float, look: Variant) -> void:
+	var g := CSGPolygon3D.new()
+	g.polygon = PackedVector2Array([Vector2(-half_depth, 0), Vector2(half_depth, 0), Vector2(0, height)])
+	g.depth = 0.2
+	g.position = pos + Vector3(0.1, 0, 0)
+	g.rotation.y = PI / 2
+	g.material = _look(look)
+	parent.add_child(g)
 
 
 ## Weiße Zierleiste um ein Fenster oder eine Tür in der xy-Ebene (Front zeigt nach +z).

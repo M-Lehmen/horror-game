@@ -44,6 +44,8 @@ var engine_started := false
 var drive_index := 1
 var street_thought_shown := false
 var same_man_shown := false
+var garden_warning_armed := false
+var garden_warning_timer := 0.0
 
 
 func _ready() -> void:
@@ -175,7 +177,13 @@ func _after_letter() -> void:
 
 
 func _on_garden_entered() -> void:
-	if state == State.AFTER_LETTER:
+	if state != State.AFTER_LETTER:
+		return
+	if not garden_warning_armed:
+		garden_warning_armed = true
+		garden_warning_timer = 3.0
+		ui.show_thought("THOUGHT_GARDEN_WARNING", 4.0)
+	elif garden_warning_timer <= 0.0:
 		_attack()
 
 
@@ -187,6 +195,7 @@ func _start_engine() -> void:
 
 
 func _process(delta: float) -> void:
+	garden_warning_timer = maxf(0.0, garden_warning_timer - delta)
 	_update_walter(delta)
 	_update_harriet(delta)
 	match state:
@@ -254,6 +263,13 @@ func _update_after_letter(delta: float) -> void:
 	if observer_phase == 1 and letter_time > 20.0 and not watched_hint_shown:
 		watched_hint_shown = true
 		ui.show_thought("THOUGHT_WATCHED", 4.0)
+	# Fortschritt darf nicht davon abhaengen, ob der Spieler die Gestalt sieht.
+	if observer_phase == 1 and letter_time >= 32.0:
+		observer.visible = false
+		observer_phase = 3
+	if observer_phase == 2 and letter_time >= 40.0:
+		observer.visible = false
+		observer_phase = 3
 	if observer_phase >= 3 and not engine_started:
 		gone_time += delta
 		if gone_time > (4.5 if observer_phase == 4 else 7.0):
@@ -324,7 +340,12 @@ func _is_looking_at(target: Vector3, max_distance: float, min_dot: float) -> boo
 	if to_target.length() > max_distance:
 		return false
 	var forward := -cam.global_transform.basis.z
-	return forward.dot(to_target.normalized()) > min_dot
+	if forward.dot(to_target.normalized()) <= min_dot:
+		return false
+	var query := PhysicsRayQueryParameters3D.create(cam.global_position, target)
+	query.exclude = [player.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.is_empty() or (hit.position as Vector3).distance_to(target) < 0.8
 
 
 func _flat_distance(a: Vector3, b: Vector3) -> float:

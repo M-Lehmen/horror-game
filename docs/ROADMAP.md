@@ -77,7 +77,16 @@ Reihenfolge zum Mergen (macht Marcelo): erst PR #2, dann PR #3. Neue Arbeit auf 
 - Nur im Headless-Lauf mit `--quit-after` meldet Godot beim Beenden "4 ObjectDB instances were leaked" (laufende Audio-Schleifen beim Dummy-Audiotreiber). Mit Fenster und im Selbsttest tritt die Warnung nicht auf.
 - `chapter1_world.gd` hat 916 Zeilen (Richtwert 800), einige Funktionen sind länger als 50 Zeilen. Es gibt noch keine Kapitel-Basisklasse.
 - Spieldauer von Kapitel 1 ist nicht gemessen (geschätzt 6 bis 10 Minuten), Verhalten auf schwächerer Hardware ungetestet (Testgerät: RTX 4080, 107 bis 134 FPS bei 1920×1080).
-- Mit freien Assets allein ist Fears-to-Fathom-Niveau nur teilweise erreichbar. Bei Häusern, Menschen, Autos und Ton wird vermutlich ein gekauftes Pack oder Eigenbau in Blender nötig. Das ist Marcelos Entscheidung (Kosten, Lernaufwand), und er sollte ehrlich darüber informiert werden.
+- ~~Gekauftes Pack oder CC0?~~ Erledigt: Für Häuser, Autos und Ton entscheidet Codex (siehe Zuständigkeiten).
+
+## Zuständigkeiten (Marcelo, 02.11.2026: "häuser autos und ton macht codex")
+
+| Wer | Bereich |
+| --- | --- |
+| **Codex** | Häuser, Autos, Ton: Modelle, echte Audio-Dateien, räumlicher Ton |
+| **Claude** | Mixamo-Figuren und Animationen, Kapitel-Basisklasse, Tests, Story-Logik |
+
+Konflikte vermeiden: Codex arbeitet in `world_kit.gd` und `chapter1_decor.gd`, Claude ändert diese Dateien währenddessen nicht. Achtung: `_neighbor_house()`, `_car()` und die Häuserreihen stehen derzeit noch in `chapter1_world.gd`. Codex sollte sie zuerst nach `chapter1_decor.gd` (oder in eine eigene Datei) verschieben und das hier vermerken, bevor beide parallel arbeiten. Der Ton liegt in `scripts/ambient_audio.gd` (gehört damit ebenfalls Codex). Unabhängig von der Datei gilt: Vor jedem Commit Godot-Import und `tests/selftest.gd` ausführen.
 
 ## Geplant / offen (nach Priorität)
 

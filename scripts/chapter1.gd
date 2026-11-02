@@ -12,6 +12,7 @@ extends "res://scripts/chapter1_world.gd"
 
 const PlayerScript := preload("res://scripts/player.gd")
 const UIScript := preload("res://scripts/ui.gd")
+const HorrorRules := preload("res://scripts/horror_rules.gd")
 
 const LETTER_KEYS: Array[String] = [
 	"LETTER_1", "LETTER_2", "LETTER_3", "LETTER_4", "LETTER_5", "LETTER_SIGNATURE",
@@ -185,11 +186,11 @@ func _after_letter() -> void:
 func _on_garden_entered() -> void:
 	if state != State.AFTER_LETTER:
 		return
-	if not garden_warning_armed:
+	if HorrorRules.should_warn_garden(garden_warning_armed):
 		garden_warning_armed = true
 		garden_warning_timer = 3.0
 		ui.show_thought("THOUGHT_GARDEN_WARNING", 4.0)
-	elif garden_warning_timer <= 0.0:
+	elif HorrorRules.should_attack_garden(garden_warning_armed, garden_warning_timer):
 		_attack()
 
 
@@ -271,10 +272,7 @@ func _update_after_letter(delta: float) -> void:
 		watched_hint_shown = true
 		ui.show_thought("THOUGHT_WATCHED", 4.0)
 	# Fortschritt darf nicht davon abhaengen, ob der Spieler die Gestalt sieht.
-	if observer_phase == 1 and letter_time >= 32.0:
-		observer.visible = false
-		observer_phase = 3
-	if observer_phase == 2 and letter_time >= 40.0:
+	if HorrorRules.should_hide_observer(observer_phase, letter_time):
 		observer.visible = false
 		observer_phase = 3
 	if observer_phase >= 3 and not engine_started:

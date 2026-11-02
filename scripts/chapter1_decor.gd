@@ -1,5 +1,9 @@
 extends "res://scripts/world_kit.gd"
-## Kapitel 1: AuÃŸendeko der Nachbarschaft (Pflanzen, ZÃ¤une, Laternen, StraÃŸenmÃ¶bel, Gras, Laub).
+## Kapitel 1: Außendeko der Nachbarschaft (Pflanzen, Zäune, Laternen, Straßenmöbel, Gras, Laub).
+
+## Hausmitten (x) der eigenen Straßenseite (z = 0, ohne Claires Haus bei x = 0) und gegenüber (z = 36).
+var near_row: Array[float] = []
+var far_row: Array[float] = []
 
 
 func _bush(pos: Vector3, r: float) -> void:
@@ -38,13 +42,12 @@ func _bike(pos: Vector3) -> void:
 
 
 func _inside_house(p: Vector3) -> bool:
-	var rects := [Vector4(0, 0, 6.2, 5.2)]  # x, z, halbe Breite, halbe Tiefe
-	for x0 in [-16.0, 16.0, 32.0]:
-		rects.append(Vector4(x0, 0, 5.2, 4.2))
-	for x0 in [-25.0, -9.0, 7.0, 23.0]:
-		rects.append(Vector4(x0, 36, 5.2, 4.2))
-	for r in rects:
-		if absf(p.x - r.x) < r.z and absf(p.z - r.y) < r.w:
+	if absf(p.x) < 6.2 and absf(p.z) < 5.2:  # Claires Haus
+		return true
+	var row: Array[float] = near_row if p.z < 18.0 else far_row
+	var z0 := 0.0 if p.z < 18.0 else 36.0
+	for x0 in row:
+		if absf(p.x - x0) < 5.2 and absf(p.z - z0) < 4.2:
 			return true
 	return false
 
@@ -57,4 +60,7 @@ func _lamp(pos: Vector3) -> void:
 	light.light_color = Color(1.0, 0.8, 0.55)
 	light.light_energy = 0.6
 	light.omni_range = 9.0
+	light.distance_fade_enabled = true
+	light.distance_fade_begin = 60.0
+	light.distance_fade_length = 20.0
 	add_child(light)

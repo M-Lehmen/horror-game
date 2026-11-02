@@ -1,19 +1,32 @@
 extends Node3D
-## Bausteine fÃ¼r die Graybox-Welt: Materialien, CSG-Formen, Modelle, Kollision, AuslÃ¶ser.
+## Bausteine für die Graybox-Welt: Materialien, CSG-Formen, Modelle, Kollision, Auslöser.
 
 const InteractableScript := preload("res://scripts/interactable.gd")
 
-## OberflÃ¤chen-Materialien, gefÃ¼llt von _make_surfaces() in chapter1_world.gd.
+## Oberflächen-Materialien, gefüllt von _make_surfaces() in chapter1_world.gd.
 var surf := {}
+## Einfarbige Materialien nach Farbe, damit gleiche Farben dasselbe Material teilen.
+var _mat_cache := {}
 
 
 func _mat(color: Color) -> StandardMaterial3D:
+	if _mat_cache.has(color):
+		return _mat_cache[color]
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
 	m.roughness = 1.0
 	if color.a < 1.0:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_mat_cache[color] = m
 	return m
+
+
+## Blendet alle sichtbaren Teile unter node ab dieser Entfernung aus (weit weg steht ohnehin Nebel).
+func _fade_far(node: Node, distance: float = 130.0) -> void:
+	for g in node.find_children("*", "GeometryInstance3D", true, false):
+		g.visibility_range_end = distance
+	if node is GeometryInstance3D:
+		node.visibility_range_end = distance
 
 
 ## Prozedurale Oberfläche: Rauschen als Farbvariation und Normal-Map, weltbezogen triplanar.

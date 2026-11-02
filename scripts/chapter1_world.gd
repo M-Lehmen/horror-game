@@ -1,5 +1,5 @@
 extends "res://scripts/chapter1_decor.gd"
-## Kapitel 1: Aufbau der Welt (Haus, InnenrÃ¤ume, Nachbarschaft, Deko). Der Ablauf steht in chapter1.gd.
+## Kapitel 1: Aufbau der Welt (Haus, Innenräume, Nachbarschaft, Deko). Der Ablauf steht in chapter1.gd.
 
 const POST_SHADER := preload("res://assets/shaders/post_process.gdshader")
 const CARDBOARD := Color(0.55, 0.42, 0.28)
@@ -22,7 +22,7 @@ var dark_car: Node3D
 var driver_head: Node3D
 
 
-# RÃ¼ckrufe der Welt-Objekte, chapter1.gd Ã¼berschreibt sie mit dem Ablauf.
+# Rückrufe der Welt-Objekte, chapter1.gd überschreibt sie mit dem Ablauf.
 func _on_mailbox_used() -> void:
 	pass
 
@@ -152,10 +152,11 @@ func _build_world() -> void:
 	var concrete: Material = surf.concrete
 
 	# Boden, Straße, Gehwege, Einfahrt
-	_box(self, Vector3(120, 1, 120), Vector3(5, -0.5, 15), grass, true)
-	_box(self, Vector3(120, 0.02, 6), Vector3(5, 0.01, 20), asphalt, false)
-	_box(self, Vector3(120, 0.03, 1), Vector3(5, 0.015, 16.5), concrete, false)
-	_box(self, Vector3(120, 0.03, 1), Vector3(5, 0.015, 23.5), concrete, false)
+	# Straße rund 380 m lang, Enden hinter Absperrung und Baumreihe (_build_street_ends)
+	_box(self, Vector3(460, 1, 240), Vector3(0, -0.5, 18), grass, true)
+	_box(self, Vector3(380, 0.02, 6), Vector3(0, 0.01, 20), asphalt, false)
+	_box(self, Vector3(380, 0.03, 1), Vector3(0, 0.015, 16.5), concrete, false)
+	_box(self, Vector3(380, 0.03, 1), Vector3(0, 0.015, 23.5), concrete, false)
 	_box(self, Vector3(3, 0.02, 11), Vector3(-4, 0.01, 10.5), concrete, false)
 	_box(self, Vector3(1.4, 0.02, 8), Vector3(0, 0.01, 12), concrete, false)
 
@@ -220,15 +221,26 @@ func _build_world() -> void:
 
 
 func _build_neighborhood() -> void:
-	# Eigene Straßenseite (Hausfront +z), links wohnt Walter Greaves
-	_neighbor_house(-16, 0, Color(0.5, 0.45, 0.4), false, true)
-	_neighbor_house(16, 0, Color(0.42, 0.4, 0.38), false, true)
-	_neighbor_house(32, 0, Color(0.47, 0.44, 0.36), false, true)
-	# Gegenüber (Hausfront -z): Harriet Price, der Beobachter und zwei weitere
-	_neighbor_house(-25, 36, Color(0.38, 0.4, 0.44), true, true)
-	_neighbor_house(-9, 36, Color(0.52, 0.48, 0.44), true, true)
-	_neighbor_house(7, 36, Color(0.4, 0.42, 0.45), true, false)
-	_neighbor_house(23, 36, Color(0.45, 0.41, 0.4), true, true)
+	# Häuserreihen alle 16 m auf beiden Seiten. Links von Claire wohnt Walter Greaves (x -16),
+	# gegenüber Harriet Price (x -9) und der Beobachter (x 7, ohne Briefkasten, Hecke davor).
+	var palette := [Color(0.5, 0.45, 0.4), Color(0.42, 0.4, 0.38), Color(0.47, 0.44, 0.36), Color(0.38, 0.4, 0.44),
+			Color(0.52, 0.48, 0.44), Color(0.4, 0.42, 0.45), Color(0.45, 0.41, 0.4), Color(0.5, 0.5, 0.46)]
+	near_row.clear()
+	far_row.clear()
+	for i in 23:
+		var nx := -176.0 + i * 16.0
+		if nx != 0.0:
+			near_row.append(nx)
+		far_row.append(-169.0 + i * 16.0)
+	for i in near_row.size():
+		var h := _neighbor_house(near_row[i], 0, palette[i % palette.size()], false, true)
+		if absf(near_row[i]) > 50.0:
+			_fade_far(h)
+	for i in far_row.size():
+		var h := _neighbor_house(far_row[i], 36, palette[(i + 3) % palette.size()], true, far_row[i] != 7.0)
+		if absf(far_row[i]) > 50.0:
+			_fade_far(h)
+	_build_street_ends()
 
 	# Hecke vor dem Haus des Beobachters, Einfahrt daneben bleibt frei
 	_box(self, Vector3(12, 1.6, 1), Vector3(6, 0.8, 24.5), surf.hedge, true)
@@ -245,15 +257,34 @@ func _build_neighborhood() -> void:
 	_car(Vector3(-30, 0, 21.8), PI / 2, Color(0.2, 0.25, 0.35), true)
 	_car(Vector3(29.5, 0, 28), PI, Color(0.4, 0.15, 0.12), true)
 
-	# Laternen auf beiden Gehwegen
-	for x in [-32.0, -8.0, 20.0, 44.0]:
-		_lamp(Vector3(x, 0, 16.2))
-	for x in [-20.0, 4.0, 36.0]:
-		_lamp(Vector3(x, 0, 23.8))
+	# Weitere geparkte Autos entlang der langen Straße
+	var car_colors := [Color(0.25, 0.3, 0.22), Color(0.45, 0.42, 0.38), Color(0.15, 0.18, 0.3), Color(0.5, 0.1, 0.08)]
+	var spots := [[Vector3(-72, 0, 21.8), PI / 2], [Vector3(62, 0, 17.8), -PI / 2], [Vector3(118, 0, 21.8), PI / 2],
+			[Vector3(-124, 0, 17.8), -PI / 2], [Vector3(-86.5, 0, 10), 0.0], [Vector3(102.5, 0, 28), PI]]
+	for i in spots.size():
+		_fade_far(_car(spots[i][0], spots[i][1], car_colors[i % car_colors.size()], true))
+
+	# Laternen alle 24 m, versetzt auf beiden Gehwegen
+	for i in 16:
+		var lx := -180.0 + i * 24.0
+		_lamp(Vector3(lx, 0, 16.2) if i % 2 == 0 else Vector3(lx, 0, 23.8))
 
 	for pos in [Vector3(-9.5, 0, 2), Vector3(13, 0, 13), Vector3(-6, 0, 30), Vector3(20, 0, 28),
 			Vector3(-30, 0, 8), Vector3(40, 0, 12), Vector3(-17, 0, 28), Vector3(36, 0, 27)]:
 		_tree(pos)
+	# Ein Baum in jedem zweiten Vorgarten weiter draußen
+	for x0 in near_row:
+		if absf(x0) > 40.0 and int(x0) % 32 == 0:
+			_tree(Vector3(x0 + 4.0, 0, 10))
+	for x0 in far_row:
+		if absf(x0) > 40.0 and int(x0 + 1.0) % 32 == 0:
+			_tree(Vector3(x0 - 4.0, 0, 29))
+
+	# Hohe Sichtschutzzäune hinter den Gärten, dahinter Wald
+	_fence(Vector3(-188, 0, -12), Vector3(188, 0, -12), 1.8)
+	_fence(Vector3(-188, 0, 47.5), Vector3(188, 0, 47.5), 1.8)
+	_tree_line(Vector3(-200, 0, -16), Vector3(200, 0, -16))
+	_tree_line(Vector3(-200, 0, 52), Vector3(200, 0, 52))
 
 	# Walter Greaves mäht den Rasen
 	walter = _person(Vector3(-15, 0, 10), Color(0.3, 0.33, 0.4), Color(0.75, 0.62, 0.52))
@@ -321,8 +352,8 @@ func _build_decor() -> void:
 		var kind := "fern_02" if rng.randf() < 0.3 else "grass_medium_01"
 		_model(M % [kind, kind], spot, rng.randf_range(0.3, 0.6), rng.randf() * TAU)
 
-	_leaves(1600)
-	_grass_field(14000)
+	_leaves(6000)
+	_grass_field(48000)
 
 
 ## Schild an einem Pfahl, Schrift auf beiden Seiten lesbar.
@@ -361,7 +392,7 @@ func _leaves(count: int) -> void:
 	var colors := [Color(0.45, 0.25, 0.08), Color(0.55, 0.35, 0.1), Color(0.35, 0.2, 0.1), Color(0.5, 0.42, 0.15)]
 	var i := 0
 	while i < count:
-		var pos := Vector3(rng.randf_range(-40, 48), 0.04, rng.randf_range(-10, 48))
+		var pos := Vector3(rng.randf_range(-186, 186), 0.04, rng.randf_range(-12, 47.5))
 		if _inside_house(pos):
 			continue
 		var rot := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, -PI / 2)
@@ -568,13 +599,13 @@ func _build_stairs() -> void:
 
 
 ## Graybox-Nachbarhaus. flipped: Front zeigt nach -z (andere Straßenseite).
-func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailbox: bool) -> void:
+func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailbox: bool) -> Node3D:
 	var h := Node3D.new()
 	h.position = Vector3(x, 0, z)
 	h.rotation.y = PI if flipped else 0.0
 	add_child(h)
 	var sidewalk := 12.0 if flipped else 16.0  # Abstand Hausmitte bis Gehweg
-	_box(h, Vector3(10, 5.5, 8), Vector3(0, 2.75, 0), _surface(color, Vector3.ONE * 0.4, 2.0, 0.06), true)
+	_box(h, Vector3(10, 5.5, 8), Vector3(0, 2.75, 0), _pbr("painted_plaster_wall", 0.4, color.lightened(0.35)), true)
 	var roof: Material = surf.roof
 	var front := _box(h, Vector3(10.6, 0.2, 5.2), Vector3(0, 7.0, 2.1), roof, false)
 	front.rotation.x = deg_to_rad(35)
@@ -599,6 +630,83 @@ func _neighbor_house(x: float, z: float, color: Color, flipped: bool, with_mailb
 	if with_mailbox:
 		_box(h, Vector3(0.1, 1.0, 0.1), Vector3(2.5, 0.5, sidewalk - 0.3), Color(0.15, 0.15, 0.15), false)
 		_box(h, Vector3(0.35, 0.3, 0.5), Vector3(2.5, 1.15, sidewalk - 0.3), Color(0.2, 0.2, 0.22), false)
+	return h
+
+
+## Straßenenden: links Baustellenabsperrung "Road Closed", rechts Sackgasse mit Leitplanke, dahinter Wald.
+## Weiter draußen Hügel, damit nirgends eine Weltkante zu sehen ist.
+func _build_street_ends() -> void:
+	for side in [-1.0, 1.0]:
+		var x: float = 186.0 * side
+		if side < 0.0:
+			for i in 8:
+				var stripe := Color(0.85, 0.1, 0.08) if i % 2 == 0 else Color(0.92, 0.92, 0.9)
+				_box(self, Vector3(0.1, 0.25, 1.2), Vector3(x, 1.0, 15.6 + i * 1.2), stripe, false)
+				_box(self, Vector3(0.1, 0.25, 1.2), Vector3(x, 0.6, 15.6 + i * 1.2), stripe.darkened(0.1), false)
+			_sign(Vector3(x + 1.0, 0, 15.2), "ROAD\nCLOSED", Color(0.95, 0.55, 0.1))
+		else:
+			_box(self, Vector3(0.15, 0.35, 9.0), Vector3(x, 0.6, 20.0), Color(0.6, 0.6, 0.62), false)
+			_sign(Vector3(x - 1.0, 0, 24.8), "DEAD\nEND", Color(0.9, 0.8, 0.15))
+		for z in [16.0, 20.0, 24.0]:
+			_cyl(self, 0.06, 1.1, Vector3(x, 0.55, z), Color(0.4, 0.4, 0.4))
+		_tree_line(Vector3(x + 6.0 * side, 0, -16), Vector3(x + 6.0 * side, 0, 52))
+	var hill := _pbr("leafy_grass", 0.05, Color(0.35, 0.4, 0.3))
+	for p in [Vector3(0, -6, -95), Vector3(130, -6, -90), Vector3(-140, -6, -100), Vector3(0, -6, 135),
+			Vector3(150, -6, 130), Vector3(-150, -6, 140), Vector3(270, -6, 20), Vector3(-270, -6, 20)]:
+		var mesh := MeshInstance3D.new()
+		var sphere := SphereMesh.new()
+		sphere.radius = 70.0
+		sphere.height = 140.0
+		mesh.mesh = sphere
+		mesh.material_override = hill
+		mesh.position = p
+		mesh.scale = Vector3(1.0, 0.25, 1.0)
+		add_child(mesh)
+
+
+## Waldrand zwischen zwei Punkten: zwei versetzte Baumreihen als MultiMesh (Stämme und Laubkugeln).
+func _tree_line(a: Vector3, b: Vector3) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(a.x * 7.0 + a.z * 13.0 + b.x)
+	var count := int(a.distance_to(b) / 2.5) * 2
+	var trunk_mesh := CylinderMesh.new()
+	trunk_mesh.top_radius = 0.18
+	trunk_mesh.bottom_radius = 0.25
+	trunk_mesh.height = 5.0
+	trunk_mesh.material = surf.bark
+	var crown_mesh := SphereMesh.new()
+	crown_mesh.radius = 1.0
+	crown_mesh.height = 2.0
+	crown_mesh.material = surf.hedge
+	var trunks := MultiMesh.new()
+	trunks.transform_format = MultiMesh.TRANSFORM_3D
+	trunks.instance_count = count
+	trunks.mesh = trunk_mesh
+	var crowns := MultiMesh.new()
+	crowns.transform_format = MultiMesh.TRANSFORM_3D
+	crowns.instance_count = count * 3
+	crowns.mesh = crown_mesh
+	# Unterholz schließt die Lücken zwischen den Stämmen
+	var brush := MultiMesh.new()
+	brush.transform_format = MultiMesh.TRANSFORM_3D
+	brush.instance_count = count
+	brush.mesh = crown_mesh
+	var dir := (b - a).normalized()
+	var side := Vector3(-dir.z, 0, dir.x)
+	for i in count:
+		var p := a + dir * (floorf(i / 2.0) * 2.5 + rng.randf_range(-0.8, 0.8)) + side * ((i % 2) * 3.0 + rng.randf_range(-0.8, 0.8))
+		var h := rng.randf_range(0.8, 1.4)
+		trunks.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(1, h, 1)), p + Vector3(0, 2.5 * h, 0)))
+		for c in 3:
+			var r := rng.randf_range(1.4, 2.4)
+			var offset := Vector3(rng.randf_range(-1.2, 1.2), 5.0 * h + rng.randf_range(-0.5, 1.5), rng.randf_range(-1.2, 1.2))
+			crowns.set_instance_transform(i * 3 + c, Transform3D(Basis().scaled(Vector3.ONE * r), p + offset))
+		var bs := rng.randf_range(1.2, 1.8)
+		brush.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(bs, bs * 0.7, bs)), p + Vector3(0, 0.6, 0)))
+	for mm in [trunks, crowns, brush]:
+		var inst := MultiMeshInstance3D.new()
+		inst.multimesh = mm
+		add_child(inst)
 
 
 ## Dreieckiger Giebel unter dem Satteldach: Grundlinie half_depth nach vorn und hinten, Spitze height darüber.
@@ -693,23 +801,27 @@ func _car(pos: Vector3, rot_y: float, color: Color, collide: bool, see_through: 
 
 
 ## Weißer Lattenzaun zwischen zwei Punkten auf einer Achse: Latten als MultiMesh, eine Kollisionsbox.
-func _fence(a: Vector3, b: Vector3) -> void:
+## height über 1,2 m ergibt einen geschlossenen Sichtschutzzaun aus breiten Brettern.
+func _fence(a: Vector3, b: Vector3, height: float = 1.0) -> void:
 	var paint := _pbr("weathered_plank_siding", 2.0, Color(0.92, 0.9, 0.86))
 	var length := a.distance_to(b)
 	var dir := (b - a).normalized()
 	var along_x := absf(dir.x) > 0.5
-	_solid(Vector3(length if along_x else 0.1, 1.0, 0.1 if along_x else length), (a + b) / 2.0 + Vector3(0, 0.5, 0))
-	for y in [0.3, 0.75]:
+	var privacy := height > 1.2
+	var step := 0.16 if privacy else 0.14
+	var width := 0.155 if privacy else 0.08
+	_solid(Vector3(length if along_x else 0.1, height, 0.1 if along_x else length), (a + b) / 2.0 + Vector3(0, height / 2.0, 0))
+	for y in [0.3, height * 0.75]:
 		_box(self, Vector3(length if along_x else 0.04, 0.07, 0.04 if along_x else length), (a + b) / 2.0 + Vector3(0, y, 0), paint, false)
 	var picket := BoxMesh.new()
-	picket.size = Vector3(0.08, 1.0, 0.025) if along_x else Vector3(0.025, 1.0, 0.08)
+	picket.size = Vector3(width, height, 0.025) if along_x else Vector3(0.025, height, width)
 	picket.material = paint
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.instance_count = int(length / 0.14)
+	mm.instance_count = int(length / step)
 	mm.mesh = picket
 	for i in mm.instance_count:
-		mm.set_instance_transform(i, Transform3D(Basis(), a + dir * (i * 0.14 + 0.07) + Vector3(0, 0.5, 0)))
+		mm.set_instance_transform(i, Transform3D(Basis(), a + dir * (i * step + step / 2.0) + Vector3(0, height / 2.0, 0)))
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
 	add_child(inst)
@@ -736,31 +848,37 @@ func _tree(pos: Vector3) -> void:
 		add_child(crown)
 
 
-## Dichtes Gras auf den Rasenflächen: das CC0-Grasbüschel als MultiMesh.
+## Dichtes Gras auf den Rasenflächen: das CC0-Grasbüschel als MultiMesh, in 24-m-Abschnitten,
+## damit weit entfernte Abschnitte ausgeblendet werden.
 func _grass_field(count: int) -> void:
 	var scene: Node3D = load("res://assets/models/grass_medium_01/grass_medium_01_1k.gltf").instantiate()
 	var source: MeshInstance3D = scene.find_children("*", "MeshInstance3D", true, false)[0]
 	var mesh: Mesh = source.mesh
 	var base_scale := 0.35 / maxf(mesh.get_aabb().size.y, 0.001)
 	scene.free()
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.instance_count = count
-	mm.mesh = mesh
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 2024
-	var i := 0
-	while i < count:
-		var p := Vector3(rng.randf_range(-40, 48), 0, rng.randf_range(-12, 48))
-		if _inside_house(p) or _on_pavement(p):
-			continue
-		var s := base_scale * rng.randf_range(0.7, 1.4)
-		mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), p))
-		i += 1
-	var inst := MultiMeshInstance3D.new()
-	inst.multimesh = mm
-	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(inst)
+	var chunks := 16
+	var per_chunk := int(count / float(chunks))
+	for c in chunks:
+		var x0 := -188.0 + c * 23.5
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.instance_count = per_chunk
+		mm.mesh = mesh
+		var i := 0
+		while i < per_chunk:
+			var p := Vector3(rng.randf_range(x0, x0 + 23.5), 0, rng.randf_range(-12, 47.5))
+			if _inside_house(p) or _on_pavement(p):
+				continue
+			var s := base_scale * rng.randf_range(0.7, 1.4)
+			mm.set_instance_transform(i, Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), p))
+			i += 1
+		var inst := MultiMeshInstance3D.new()
+		inst.multimesh = mm
+		inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		inst.visibility_range_end = 70.0
+		add_child(inst)
 
 
 ## Straße, Gehwege, Einfahrten und Wege, auf denen kein Gras wächst.
@@ -769,10 +887,10 @@ func _on_pavement(p: Vector3) -> bool:
 		return true
 	if absf(p.x + 4.0) < 1.7 and p.z > 4.5 or absf(p.x) < 0.9 and p.z > 4.5:
 		return true
-	for x0 in [-16.0, 16.0, 32.0]:
+	for x0 in near_row:
 		if absf(p.x - (x0 - 6.5)) < 1.7 and p.z < 16.0:
 			return true
-	for x0 in [-25.0, -9.0, 7.0, 23.0]:
+	for x0 in far_row:
 		if absf(p.x - (x0 + 6.5)) < 1.7 and p.z > 24.0:
 			return true
 	return false
@@ -782,11 +900,12 @@ func _on_pavement(p: Vector3) -> bool:
 func _add_bounds() -> void:
 	var bounds := StaticBody3D.new()
 	add_child(bounds)
+	# Jeweils direkt hinter einem sichtbaren Hindernis: Sichtschutzzäune hinten, Absperrung und Leitplanke an den Enden.
 	var walls := [
-		[Vector3(100, 10, 1), Vector3(4, 5, -15)],
-		[Vector3(100, 10, 1), Vector3(4, 5, 50)],
-		[Vector3(1, 10, 70), Vector3(-42, 5, 17)],
-		[Vector3(1, 10, 70), Vector3(50, 5, 17)],
+		[Vector3(380, 10, 1), Vector3(0, 5, -12.6)],
+		[Vector3(380, 10, 1), Vector3(0, 5, 48.1)],
+		[Vector3(1, 10, 62), Vector3(-186.6, 5, 17.75)],
+		[Vector3(1, 10, 62), Vector3(186.6, 5, 17.75)],
 	]
 	for w in walls:
 		var shape := CollisionShape3D.new()

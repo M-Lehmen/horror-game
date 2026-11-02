@@ -42,3 +42,4 @@ Alle Assets stammen von [Poly Haven](https://polyhaven.com) und stehen unter [CC
 | tree_stump_01 | Modell (glTF 1k) | https://polyhaven.com/a/tree_stump_01 | CC0 1.0 | assets/models/tree_stump_01 |
 | planter_box_01 | Modell (glTF 1k) | https://polyhaven.com/a/planter_box_01 | CC0 1.0 | assets/models/planter_box_01 |
 | wall_clock | Modell (glTF 1k) | https://polyhaven.com/a/wall_clock | CC0 1.0 | assets/models/wall_clock |
+| kloofendal_overcast_puresky | HDRI-Himmel (2k) | https://polyhaven.com/a/kloofendal_overcast_puresky | CC0 1.0 | assets/textures/sky |

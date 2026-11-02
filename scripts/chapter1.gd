@@ -352,13 +352,10 @@ func _flat_distance(a: Vector3, b: Vector3) -> float:
 # --- Welt bauen -------------------------------------------------------------
 
 func _build_environment() -> void:
-	# Bedeckter Spätnachmittag: grauer Himmel, gedämpfte Farben, wenig Kontrast in den Schatten
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.36, 0.4, 0.45)
-	sky_mat.sky_horizon_color = Color(0.58, 0.58, 0.56)
-	sky_mat.ground_horizon_color = Color(0.5, 0.5, 0.48)
-	sky_mat.ground_bottom_color = Color(0.18, 0.18, 0.17)
-	sky_mat.sun_angle_max = 20.0
+	# Bedeckter Spätnachmittag: CC0-HDRI-Himmel von Poly Haven, gedämpfte Farben
+	var sky_mat := PanoramaSkyMaterial.new()
+	sky_mat.panorama = load("res://assets/textures/sky/kloofendal_overcast_puresky_2k.hdr")
+	sky_mat.energy_multiplier = 0.55
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 
@@ -369,7 +366,7 @@ func _build_environment() -> void:
 	env.ambient_light_energy = 0.5
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 0.95
+	env.tonemap_exposure = 0.85
 	env.sdfgi_enabled = true
 	env.sdfgi_use_occlusion = true
 	env.ssao_enabled = true
@@ -728,20 +725,21 @@ func _inside_house(p: Vector3) -> bool:
 
 func _build_house() -> void:
 	var wall: Material = surf.siding
+	var inside := _pbr("painted_plaster_wall", 0.6, Color(0.8, 0.74, 0.64))
 	var ground := CSGCombiner3D.new()
 	ground.use_collision = true
 	add_child(ground)
 	# Erdgeschoss: Außenbox minus Innenraum ergibt Wände, Boden und Decke
 	_box(ground, Vector3(12, 3, 10), Vector3(0, 1.4, 0), wall, false)
-	_sub(ground, Vector3(11.6, 2.8, 9.6), Vector3(0, 1.4, 0), wall)
+	_sub(ground, Vector3(11.6, 2.8, 9.6), Vector3(0, 1.4, 0), inside)  # Innenflächen verputzt
 	_sub(ground, Vector3(1.2, 2.2, 0.6), Vector3(0, 1.1, 4.9), wall)       # Haustür
 	_sub(ground, Vector3(1.6, 1.2, 0.6), Vector3(-3.5, 1.5, 4.9), wall)    # Fenster vorne
 	_sub(ground, Vector3(1.6, 1.2, 0.6), Vector3(3.5, 1.5, 4.9), wall)
 	_sub(ground, Vector3(0.6, 1.2, 1.6), Vector3(-5.9, 1.5, 2.5), wall)    # Fenster Seiten
 	_sub(ground, Vector3(0.6, 1.2, 1.6), Vector3(5.9, 1.5, -2.5), wall)
 	_sub(ground, Vector3(5.3, 0.4, 1.4), Vector3(-3.15, 2.85, -4.0), wall) # Treppenloch
-	_box(ground, Vector3(11.6, 2.8, 0.15), Vector3(0, 1.4, 0), wall, false) # Innenwand
-	_sub(ground, Vector3(1.2, 2.2, 0.4), Vector3(2.5, 1.1, 0), wall)       # Durchgang Küche
+	_box(ground, Vector3(11.6, 2.8, 0.15), Vector3(0, 1.4, 0), inside, false) # Innenwand
+	_sub(ground, Vector3(1.2, 2.2, 0.4), Vector3(2.5, 1.1, 0), inside)       # Durchgang Küche
 
 	_box(self, Vector3(11.6, 0.02, 9.6), Vector3(0, 0.01, 0), surf.wood, false)
 	# Dielen oben, ohne das Treppenloch (x -5,8 bis -0,5, z -4,7 bis -3,3)
@@ -753,12 +751,12 @@ func _build_house() -> void:
 	upper.use_collision = true
 	add_child(upper)
 	_box(upper, Vector3(12, 3, 10), Vector3(0, 4.4, 0), wall, false)
-	_sub(upper, Vector3(11.6, 2.8, 9.6), Vector3(0, 4.4, 0), wall)
+	_sub(upper, Vector3(11.6, 2.8, 9.6), Vector3(0, 4.4, 0), inside)
 	_sub(upper, Vector3(5.3, 0.4, 1.4), Vector3(-3.15, 2.95, -4.0), wall)  # Treppenloch
 	for x in [-3.5, 0.0, 3.5]:
 		_sub(upper, Vector3(1.4, 1.2, 0.6), Vector3(x, 4.5, 4.9), wall)
-	_box(upper, Vector3(11.6, 2.8, 0.15), Vector3(0, 4.4, 0), wall, false) # Innenwand
-	_sub(upper, Vector3(1.2, 2.2, 0.4), Vector3(-4.0, 4.1, 0), wall)       # Tür Kinderzimmer
+	_box(upper, Vector3(11.6, 2.8, 0.15), Vector3(0, 4.4, 0), inside, false) # Innenwand
+	_sub(upper, Vector3(1.2, 2.2, 0.4), Vector3(-4.0, 4.1, 0), inside)       # Tür Kinderzimmer
 
 	# Scheiben und Zierleisten an den Fensteröffnungen, Rahmen um die Haustür
 	for w in [[Vector3(-3.5, 1.5, 4.9), Vector2(1.6, 1.2)], [Vector3(3.5, 1.5, 4.9), Vector2(1.6, 1.2)],

@@ -2,6 +2,9 @@ extends "res://scripts/chapter1_decor.gd"
 ## Kapitel 1: Aufbau der Welt (Haus, Innenräume, Nachbarschaft, Deko). Der Ablauf steht in chapter1.gd.
 
 const POST_SHADER := preload("res://assets/shaders/post_process.gdshader")
+## Garten des Beobachters hinter der Hecke (Auslöser für Warnung und Angriff).
+const GARDEN_CENTER := Vector3(6, 1.5, 28)
+const GARDEN_SIZE := Vector3(12, 3, 6)
 const CARDBOARD := Color(0.55, 0.42, 0.28)
 ## Claires Auto in der Einfahrt.
 const CAR_SPOT := Vector3(-4, 0, 11)
@@ -215,7 +218,7 @@ func _build_world() -> void:
 	dark_car.visible = false
 
 	# Auslöser: Garten hinter der Hecke
-	_area(Vector3(12, 3, 6), Vector3(6, 1.5, 28), _on_garden_entered)
+	_area(GARDEN_SIZE, GARDEN_CENTER, _on_garden_entered)
 
 	_add_bounds()
 

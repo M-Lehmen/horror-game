@@ -73,10 +73,20 @@ Reihenfolge zum Mergen (macht Marcelo): erst PR #2, dann PR #3. Neue Arbeit auf 
 
 - Keine animierten Menschen (bei Poly Haven gibt es keine CC0-Menschen). Das ist der größte Abstand zu Fears to Fathom.
 - Häuser sind CSG-Blöcke statt Modelle, Bäume und Autos aus Grundformen. Die CC0-Bäume von Poly Haven sind 475 bis 935 MB groß (`tree_small_02` allein 98 MB), das CC0-Auto dort ist nur abgedeckt.
-- Das Spiel ist stumm.
+- Ton nur als prozedurale Platzhalter (Wind, Mäher, Motor); keine Schritte, Türen, Musik und keine echten Aufnahmen.
+- Nur im Headless-Lauf mit `--quit-after` meldet Godot beim Beenden "4 ObjectDB instances were leaked" (laufende Audio-Schleifen beim Dummy-Audiotreiber). Mit Fenster und im Selbsttest tritt die Warnung nicht auf.
 - `chapter1_world.gd` hat 916 Zeilen (Richtwert 800), einige Funktionen sind länger als 50 Zeilen. Es gibt noch keine Kapitel-Basisklasse.
 - Spieldauer von Kapitel 1 ist nicht gemessen (geschätzt 6 bis 10 Minuten), Verhalten auf schwächerer Hardware ungetestet (Testgerät: RTX 4080, 107 bis 134 FPS bei 1920×1080).
-- Mit freien Assets allein ist Fears-to-Fathom-Niveau nur teilweise erreichbar. Bei Häusern, Menschen, Autos und Ton wird vermutlich ein gekauftes Pack oder Eigenbau in Blender nötig. Das ist Marcelos Entscheidung (Kosten, Lernaufwand), und er sollte ehrlich darüber informiert werden.
+- ~~Gekauftes Pack oder CC0?~~ Erledigt: Für Häuser, Autos und Ton entscheidet Codex (siehe Zuständigkeiten).
+
+## Zuständigkeiten (Marcelo, 02.11.2026: "häuser autos und ton macht codex")
+
+| Wer | Bereich |
+| --- | --- |
+| **Codex** | Häuser, Autos, Ton: Modelle, echte Audio-Dateien, räumlicher Ton |
+| **Claude** | Mixamo-Figuren und Animationen, Kapitel-Basisklasse, Tests, Story-Logik |
+
+Konflikte vermeiden: Codex arbeitet in `world_kit.gd` und `chapter1_decor.gd`, Claude ändert diese Dateien währenddessen nicht. Achtung: `_neighbor_house()`, `_car()` und die Häuserreihen stehen derzeit noch in `chapter1_world.gd`. Codex sollte sie zuerst nach `chapter1_decor.gd` (oder in eine eigene Datei) verschieben und das hier vermerken, bevor beide parallel arbeiten. Der Ton liegt in `scripts/ambient_audio.gd` (gehört damit ebenfalls Codex). Unabhängig von der Datei gilt: Vor jedem Commit Godot-Import und `tests/selftest.gd` ausführen.
 
 ## Geplant / offen (nach Priorität)
 
@@ -86,7 +96,7 @@ Reihenfolge zum Mergen (macht Marcelo): erst PR #2, dann PR #3. Neue Arbeit auf 
 4. **Ton:** Wind, Schritte (je Untergrund), Rasenmäher, Motor des dunklen Wagens, Türen, Briefkasten, leise Musikflächen. Nur CC0 (z. B. freesound.org mit CC0-Filter).
 5. **Hauptmenü, Pause, Einstellungen** (Lautstärke, Mausempfindlichkeit, Grafikqualität, Sprache), Speichern/Laden.
 6. Grafik verfeinern Richtung Fears to Fathom: echte Haus- und Baummodelle statt CSG (CC0-Bäume von Poly Haven sind 475 MB+, daher bisher Kugelkronen), echte Autos, Dachrinnen/Dachüberstände, Innentüren, Lichtschalter, mehr Kleinkram (Bücher, Geschirr), Briefkasten-Modell, gebackenes Licht oder Volumennebel.
-7. Selbsttest und Screenshot-Skript ins Repo (`tests/`), Spieldauer messen (Ziel Kapitel 1: ca. 10 Minuten).
+7. Spieldauer messen (Ziel Kapitel 1: ca. 10 Minuten). Selbsttest und Screenshot-Skript liegen inzwischen in `tests/`.
 
 ## Wünsche und Änderungen von Marcelo (Feedback-Log)
 
@@ -118,9 +128,32 @@ Nächste gezielte Verbesserungen nach/mit dem laufenden Grafik- und Figurenausba
 Branch `feature/audio-gameplay-systeme-20261102` (Basis `recherche/spannungsdramaturgie`); detaillierte Übergabe in [UEBERGABE_CHATGPT.md](UEBERGABE_CHATGPT.md). Besonderheiten und Zusammenarbeitsregeln in [FIGUREN_GRAFIK_HANDOFF.md](FIGUREN_GRAFIK_HANDOFF.md).
 
 - Gameplay: Gestalt nach Frist automatisch verschwinden lassen, Raycast-Sichtlinie, Gartenwarnung vor dem zweiten Eintritt. Änderungen sind in GDScript, nicht durchgespielt.
-- Sound: prozedurale Wind-/Mäher-/Motor-Platzhalter zur Laufzeit; `tools/generate_audio.py` erzeugt sieben selbst synthetisierte WAVs lokal. Nicht alle SFX in Gameplay eingebunden, kein WAV-Commit.
-- Testing: `tests/smoke.gd` und `scripts/horror_rules.gd`; Godot-Laufzeit und vollständige Leveltests noch offen.
+- Sound: prozedurale Wind-/Mäher-/Motor-Platzhalter zur Laufzeit (`scripts/ambient_audio.gd`). Der WAV-Generator `tools/generate_audio.py` wurde in der Reparaturetappe entfernt, weil das Spiel ihn nicht nutzte.
+- Testing: `tests/smoke.gd` und `scripts/horror_rules.gd`; echte Spieltests siehe Reparaturetappe.
 - Pausemenü: Lautstärke, Mausempfindlichkeit, Sprache und Checkpoint-Neustart; Einstellungen lokal gespeichert.
 - Mehrere Kapitel: validierter Szenenwechsel in `Game.open_chapter` vorbereitet, keine neue Basisklasse.
 - Figuren/Grafik: vorbereitender AnimationPlayer-Adapter und Übergabe-Checkliste. **Keine** echten Animationen/externen Modelle, keine direkte Weltbau-Änderung.
 - Abnahme ausstehend: Godot-Import, Syntax, Gameplay, FPS, Audio-Mix, Menü, Lizenz und Git LFS.
+
+## Claude-Prüf- und Reparaturetappe (02.11.2026)
+
+Branch `fix/pr5-start-und-garten` (Basis `feature/audio-gameplay-systeme-20261102`). Die Prüfung in Godot 4.7.2 ergab: Das Spiel startete nicht, weil `scripts/game.gd` Tab- und Leerzeichen-Einrückung mischte ("Parse Error: Used space character for indentation instead of tab"). Ohne das Autoload `Game` fehlten Tastenbelegung und Einstellungen, das Pausemenü stürzte ab. Der Smoke-Test meldete trotzdem OK, weil er nur Textstellen prüft.
+
+Behoben:
+- Einrückung in allen neuen Dateien auf Tabs (Projektstandard).
+- Garten: Wer nach der Warnung im Garten bleibt, wird nach Ablauf des Timers angegriffen (vorher nur beim erneuten Betreten). Gartenmaße als `GARDEN_CENTER`/`GARDEN_SIZE` in `chapter1_world.gd`.
+- Rasenmäher als Raumklang (`AudioStreamPlayer3D`) an Walter statt überall gleich laut.
+- `tools/generate_audio.py` entfernt (ungenutzt, brauchte Python mit numpy).
+- Echte Spieltests im Repo: `tests/selftest.gd` (Treppe, kompletter Ablauf bis Kapitelende, Garten-Warnung und -Angriff) und `tests/shots.gd` (FPS-Messung und Screenshots).
+
+Testbefehle (alle aus dem Projektordner, `<godot>` = `Godot_v4.7.2-stable_win64_console.exe`):
+```
+<godot> --headless --path . --import                      (zweimal)
+<godot> --headless --path . --script res://tests/smoke.gd
+<godot> --headless --path . -s res://tests/selftest.gd     (Exit-Code 0 = bestanden)
+<godot> --headless --path . --quit-after 600
+<godot> --path . --resolution 1920x1080 -s res://tests/shots.gd -- <name> <zielordner>
+```
+Ergebnis: Import 0 Fehler, Smoke-Test 5/5 OK, Selbsttest 16/16 PASS, mit Fenster 105 FPS (RTX 4080, 1920×1080).
+
+**Regel für alle KIs:** Vor jedem Commit mindestens den Import und `tests/selftest.gd` in Godot ausführen. Wer Godot nicht ausführen kann, markiert den Commit als ungetestet und lässt die Prüfung von jemandem mit Godot machen.

@@ -25,11 +25,13 @@ Godot ist in der ChatGPT-Umgebung **nicht installiert**; auch externer Git-Clone
 
 Lokal:
 ```sh
-python tools/generate_audio.py
 godot --headless --path . --import
 godot --headless --path . --script res://tests/smoke.gd
+godot --headless --path . -s res://tests/selftest.gd
 godot --headless --path . --quit-after 600
 ```
+
+Nachtrag (Claude, Reparaturetappe): `tools/generate_audio.py` wurde entfernt, weil das Spiel die WAVs nicht nutzte. Der ursprüngliche Stand dieses Branches startete wegen gemischter Einrückung in `scripts/game.gd` nicht. Details und Ergebnisse in [ROADMAP.md](ROADMAP.md), Abschnitt "Claude-Prüf- und Reparaturetappe".
 Danach 1920×1080 mit Fenster spielen, Pausenmenü und Checkpoint ausprobieren und Leistung protokollieren. Falls Parser-Fehler auftreten, zuerst `scripts/ambient_audio.gd`, `scripts/pause_menu.gd` und `scripts/chapter1.gd` kontrollieren.
 
 ## Zusammenarbeit / Merge

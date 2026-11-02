@@ -55,6 +55,7 @@ func _ready() -> void:
 	_build_world()
 	ambient_audio = preload("res://scripts/ambient_audio.gd").new()
 	add_child(ambient_audio)
+	ambient_audio.attach_mower(walter)
 	add_child(preload("res://scripts/pause_menu.gd").new())
 
 	ui = UIScript.new()
@@ -210,6 +211,9 @@ func _process(delta: float) -> void:
 		State.AFTER_LETTER:
 			_update_observer(delta)
 			_update_after_letter(delta)
+			# Wer nach der Warnung im Garten bleibt, wird angegriffen, sobald der Timer abläuft.
+			if _player_in_garden() and HorrorRules.should_attack_garden(garden_warning_armed, garden_warning_timer):
+				_attack()
 		State.CAR:
 			_update_car(delta)
 
@@ -351,6 +355,11 @@ func _is_looking_at(target: Vector3, max_distance: float, min_dot: float) -> boo
 	query.exclude = [player.get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	return hit.is_empty() or (hit.position as Vector3).distance_to(target) < 0.8
+
+
+func _player_in_garden() -> bool:
+	var p: Vector3 = player.global_position
+	return absf(p.x - GARDEN_CENTER.x) < GARDEN_SIZE.x / 2.0 and absf(p.z - GARDEN_CENTER.z) < GARDEN_SIZE.z / 2.0
 
 
 func _flat_distance(a: Vector3, b: Vector3) -> float:

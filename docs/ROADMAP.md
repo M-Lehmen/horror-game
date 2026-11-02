@@ -113,3 +113,14 @@ Nächste gezielte Verbesserungen nach/mit dem laufenden Grafik- und Figurenausba
 5. Kapitel mit Personen ohne Vorwissen testen; Spannung, Verwirrung und Frust getrennt bewerten. Zahlen im Analyseplan sind Zielwerte, keine erreichten Testergebnisse.
 
 Übergabe: Basis ist `grafik/kapitel-1` bei `f0c0ebabf517e81b5010fe9ef3f14e0d1beca61f`. Nach Freigabe der GitHub-App funktioniert der Schreibzugriff. Die Dokumentation liegt auf `recherche/spannungsdramaturgie`; der Pull Request richtet sich gegen `grafik/kapitel-1`, damit ausschließlich diese Recherche-Ergänzungen enthalten sind. Nichts wurde nach `main` gemergt. Bestehende Merge-Reihenfolge bleibt PR #2 → PR #3; anschließend diesen Dokumentations-PR übernehmen bzw. seine Basis nach den Merges anpassen. Nächste Arbeitsetappe: die oben genannten P0-Punkte implementieren und in Godot testen.
+
+## ChatGPT-Implementierungsetappe (02.11.2026)
+Branch `feature/audio-gameplay-systeme-20261102` (Basis `recherche/spannungsdramaturgie`); detaillierte Übergabe in [UEBERGABE_CHATGPT.md](UEBERGABE_CHATGPT.md). Besonderheiten und Zusammenarbeitsregeln in [FIGUREN_GRAFIK_HANDOFF.md](FIGUREN_GRAFIK_HANDOFF.md).
+
+- Gameplay: Gestalt nach Frist automatisch verschwinden lassen, Raycast-Sichtlinie, Gartenwarnung vor dem zweiten Eintritt. Änderungen sind in GDScript, nicht durchgespielt.
+- Sound: prozedurale Wind-/Mäher-/Motor-Platzhalter zur Laufzeit; `tools/generate_audio.py` erzeugt sieben selbst synthetisierte WAVs lokal. Nicht alle SFX in Gameplay eingebunden, kein WAV-Commit.
+- Testing: `tests/smoke.gd` und `scripts/horror_rules.gd`; Godot-Laufzeit und vollständige Leveltests noch offen.
+- Pausemenü: Lautstärke, Mausempfindlichkeit, Sprache und Checkpoint-Neustart; Einstellungen lokal gespeichert.
+- Mehrere Kapitel: validierter Szenenwechsel in `Game.open_chapter` vorbereitet, keine neue Basisklasse.
+- Figuren/Grafik: vorbereitender AnimationPlayer-Adapter und Übergabe-Checkliste. **Keine** echten Animationen/externen Modelle, keine direkte Weltbau-Änderung.
+- Abnahme ausstehend: Godot-Import, Syntax, Gameplay, FPS, Audio-Mix, Menü, Lizenz und Git LFS.

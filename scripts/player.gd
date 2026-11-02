@@ -46,8 +46,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not can_move:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		rotate_y(-event.relative.x * MOUSE_SENS)
-		camera.rotate_x(-event.relative.y * MOUSE_SENS)
+		rotate_y(-event.relative.x * Game.mouse_sensitivity)
+		camera.rotate_x(-event.relative.y * Game.mouse_sensitivity)
 		camera.rotation.x = clampf(camera.rotation.x, -1.4, 1.4)
 	elif event.is_action_pressed("interact") and focused != null:
 		get_viewport().set_input_as_handled()

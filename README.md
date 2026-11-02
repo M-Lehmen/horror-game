@@ -3,7 +3,7 @@
 First-Person-Horrorspiel in Godot 4 im Stil von Fears to Fathom.
 Episode 1: **"The Observer" / "Der Beobachter"**, frei nach einem realen Fall, komplett fiktionalisiert.
 
-Konzept: siehe [docs/konzept.md](docs/konzept.md).
+Konzept: siehe [docs/konzept.md](docs/konzept.md). Stand, Regeln und geplante Features (Übergabe-Datei): [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Projekt öffnen
 

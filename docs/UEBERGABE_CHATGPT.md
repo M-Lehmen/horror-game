@@ -1,33 +1,36 @@
-# Übergabe: ChatGPT-Arbeitsbranch (02.11.2026)
+# Übergabe ChatGPT → Claude / nächste Sitzung
 
-## Branch / Stand
-- Branch: `feature/audio-gameplay-systeme-20261102` auf Basis `recherche/spannungsdramaturgie` (PR #4); dadurch enthält er Vorarbeiten aus PR #2/#3/#4. **Nicht** nach main mergen, solange die PR-Kette nicht sauber abgeglichen ist.
-- Keine Änderungen an Claudes eigenen Branches. Niemals force-push.
-- Arbeitsweise: Aufgaben einzeln erledigen und nach jedem Abschnitt hier dokumentieren.
+Stand: 02.11.2026, Branch `feature/audio-gameplay-systeme-20261102` (Basis `recherche/spannungsdramaturgie`, PR #4).
+Auf Basis von Claudes PR-Kette #2 → #3 und Recherche #4. Keine Änderungen an fremden Branches, kein Merge nach main, kein force-push.
 
-## Bisher umgesetzt
-1. Gameplay in `scripts/chapter1.gd`:
-   - nach dem Brief verschwindet die unbemerkte Gestalt nach 32 Sekunden, beziehungsweise nach 40 Sekunden bei erkannter Gestalt. Danach startet der Motor wie gewohnt; Blicken ist keine Fortschrittsbedingung mehr.
-   - Garten: erster Eintritt warnt; erst erneuter Eintritt nach mindestens drei Sekunden löst Angriff aus. Kein zusätzlicher äußerer Warnungsbereich vorhanden; unbedingt im Gameplay prüfen.
-   - `_is_looking_at` prüft zusätzlich Physik-Raycast gegen Hindernisse. Noch auf Godot/Collision-Masken testen.
-   - `THOUGHT_GARDEN_WARNING` in DE/EN hinzugefügt.
-2. Prozedurales Audio in `scripts/ambient_audio.gd`: leiser Wind und Rasenmäher, Motor-Cue. Keine fremden Samples. Mäher stoppt beim Beobachten und setzt nach Kartons wieder ein. **Noch kein vollständiges Audio-Paket / keine fertigen WAVs**.
-3. `tests/smoke.gd`: assetfreier Headless-Strukturtest, **noch nicht in Godot ausgeführt**.
+## Fertig im Arbeitsbranch (noch nicht Godot-laufzeitgetestet)
+1. **Gameplay:** `scripts/chapter1.gd` hat eine 32-/40-Sekunden-Ausweichlogik für eine übersehene Gestalt, physikalischen Raycast für Sichtprüfung, Gartenwarnung beim ersten Eintritt und Angriff erst beim erneuten Eintritt nach mindestens 3 Sekunden. `scripts/horror_rules.gd` kapselt diese Regeln. Neue Gartenwarnung in DE/EN.
+2. **Audio:** `scripts/ambient_audio.gd` erzeugt und spielt leise Wind-/Mäher- und Motor-Platzhalter ohne Fremd-Samples; Mäher stoppt/wird wieder hörbar bei Walters Reaktion. `tools/generate_audio.py` erzeugt sieben WAV-Soundeffekte nach `assets/audio/generated/` (Python 3 + numpy): Wind, Mäher, Motorstart, Holzschritt, Kieseltritt, Türknarren, Briefkastenklick. WAV-Dateien **nicht** in GitHub-Branch committed: als lokales ZIP erstellt, jederzeit per Generator reproduzierbar. Für Godot sind noch räumliche Quellen und Integration aller WAVs nötig.
+3. **Tests:** `tests/smoke.gd` führt Godot-Headless-Prüfungen von Dateien, Sicht-Raycasts und der reinen Spielregeln durch; kein vollautomatisierter Leveldurchlauf.
+4. **Menü / Einstellungen:** `scripts/pause_menu.gd` wird in Kapitel 1 eingebunden: Pause über Esc, Lautstärke, Mausempfindlichkeit, Sprachwechsel und Neustart vom Checkpoint. `scripts/game.gd` speichert Optionen in `user://settings.cfg`; `scripts/player.gd` verwendet die eingestellte Sensitivität. Menü-Keys in DE/EN.
+5. **Mehrere Kapitel:** `Game.CHAPTER_PATHS` und `open_chapter(index)` prüfen den Szenenpfad und wechseln sicher zu vorhandenen Szenen. Noch keine echte Kapitel-Basisklasse, keine weiteren Kapitel.
+6. **Charaktere:** `scripts/character_animation_adapter.gd` kann optionale vorhandene AnimationPlayer-Clips ansprechen; **nicht** an Figuren gebunden, keine externen Charaktermodelle hinzugefügt.
+7. **Grafik/Umgebung:** `docs/FIGUREN_GRAFIK_HANDOFF.md` enthält Integrations- und Modellprioritäten. Noch **keine** neuen Modelle/Grafikänderungen; Claudes Weltbau-Dateien unangetastet.
 
-## Noch offen
-- Audio: echte räumliche Quellen, Schritte je Untergrund, Türen, Post, Kartons; hochwertigere SFX-Dateien, Mix und dynamische Dämpfung.
-- Gameplay: Garden-Trigger-Geometrie und tatsächliche Warnung/Umkehr vor Ort prüfen, Sichtlinien; Checkpoint/Ende durchspielen.
-- Tests: vollständigen Gameplay-Selbsttest, Import und Godot-Headless-Lauf sowie FPS auf Zielhardware.
-- Menü, Optionen, Persistenz, Kapitel-Basisklasse, animierte Figuren, Haus-/Fahrzeug-Modelle, weitere Deko.
-- Assets strikt nach Projekt-Lizenzregeln; Mixamo nicht ins öffentliche Repo hochladen. Keine Kosten auslösen.
+## Noch zu erledigen, in dieser Reihenfolge
+1. Godot-Import, statischer Syntax-/Headless-Test, vollständiger Durchlauf: Gestalt ignorieren, Garten betreten/umkehren/erneut betreten, Text/Checkpoint/Ende prüfen. Dabei Fehler beheben, bevor neue Features kommen.
+2. Audio in 3D an Gebäude, Gehweg, Briefkasten und Auto binden; Schritte getrennt nach Boden, Innenraumdämpfung, dynamische Mischung. Anschließend echte WAVs über Git LFS importieren und Credits für selbst generierte Dateien ergänzen.
+3. Menü auf kleinen Displays und bei Brief-UI/Pause testen; optional Grafikqualität und Hauptmenü ergänzen.
+4. Wiederverwendbare Basisklasse für Kapitel / echte Kapitelwechsel und Save/Load nach Tests.
+5. Nach Absprache mit Claude Modelle/Animationen einbauen; Mixamo-Dateien nicht unbesehen ins öffentliche Repo laden.
+6. Umgebung weiter ausbauen, ohne `scripts/chapter1_world.gd` auf parallelen Branches zu überschreiben; FPS messen.
 
-## Testanleitung
+## Tests / Validierungsstatus
+Godot ist in der ChatGPT-Umgebung **nicht installiert**; auch externer Git-Clone über die Containerverbindung war nicht erreichbar. Darum wurden die Godot-Tests **nicht ausgeführt**. GitHub konnte den Branch, Dateiinhalte und Commits erfolgreich zurückgeben. Damit ist weder 0 Warnungen noch 60 FPS belegt.
+
+Lokal:
 ```sh
+python tools/generate_audio.py
 godot --headless --path . --import
 godot --headless --path . --script res://tests/smoke.gd
 godot --headless --path . --quit-after 600
 ```
-Zusätzlich Kapitel 1 im Fenster vollständig durchspielen, bewusst die Gestalt ignorieren, den Garten betreten/umkehren/erneut betreten und auf Fehlwarnungen prüfen. Diese Tests wurden in dieser Cloud-Umgebung mangels Godot nicht ausgeführt.
+Danach 1920×1080 mit Fenster spielen, Pausenmenü und Checkpoint ausprobieren und Leistung protokollieren. Falls Parser-Fehler auftreten, zuerst `scripts/ambient_audio.gd`, `scripts/pause_menu.gd` und `scripts/chapter1.gd` kontrollieren.
 
-## Kollaboration
-Vor jeder weiteren Änderung aktuelle Branches/PRs und diese Datei lesen. Claude arbeitet weiter an Figuren/Grafik; parallele Änderungen derselben Dateien vermeiden. PR auf `recherche/spannungsdramaturgie` richten. Nach PR-Merges die Basis per Git anpassen.
+## Zusammenarbeit / Merge
+PR dieses Branches gegen `recherche/spannungsdramaturgie`, damit keine Arbeiten aus #2/#3/#4 dupliziert im Diff erscheinen. Nach Merge der PR-Kette PR-Basis ggf. anpassen. Claude soll vor Fortsetzung diese Datei, offene PRs und Commits erneut einsehen. Keine automatische Wiederaufnahme nach Chat-Ende; nächste ChatGPT-Sitzung muss neu gestartet werden.

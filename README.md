@@ -51,3 +51,7 @@ TranslationServer.set_locale("de")
 ## Assets und Lizenzen
 
 Nur Assets mit passender Lizenz verwenden (z. B. CC0) und jede Quelle in `assets/CREDITS.md` eintragen.
+
+## Spannungsdramaturgie
+
+Recherche, Quellen und konkrete Verbesserungen für Kapitel 1: [docs/SPANNUNGSANALYSE.md](docs/SPANNUNGSANALYSE.md). Umsetzung und Video-Vollsichtung sind dort getrennt vom geprüften Stand markiert.

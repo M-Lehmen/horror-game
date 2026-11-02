@@ -97,3 +97,19 @@ Reihenfolge zum Mergen (macht Marcelo): erst PR #2, dann PR #3. Neue Arbeit auf 
 - Langfristig: Spiel im Stil von Fears to Fathom mit eigener Story und Platz für weitere Geschichten.
 - Weitere Geschichten sollen später als eigene Episoden ergänzt werden können (siehe Punkt 2 unter "Geplant").
 - Marcelo wünscht sich, dass diese Datei den Stand für eine Übernahme durch eine andere KI (z. B. ChatGPT) festhält, falls die Tokens auslaufen. Bitte deshalb nach jeder Etappe pflegen.
+
+
+## Recherche-Etappe: Spannungsdramaturgie (02.11.2026)
+
+Neue Referenz: [SPANNUNGSANALYSE.md](SPANNUNGSANALYSE.md). Enthält Vergleich der fünf Solo-Episoden, Abgrenzung zu Scratch Creek, verifizierte YouTube-Referenzen, Quellen, einen Kapitel-1-Plan, Audio-Vorgaben und Blindtest-Kriterien.
+
+Status: Recherche/Design abgeschlossen innerhalb der dokumentierten Quellenlage; vollständige Video-Sichtung und Reaktionsprotokolle stehen aus. Kein Gameplay und kein Audio in dieser Etappe geändert. Keine Godot-Laufzeitprüfung notwendig/durchgeführt, weil nur Dokumentation ergänzt wurde.
+
+Nächste gezielte Verbesserungen nach/mit dem laufenden Grafik- und Figurenausbau:
+1. P0: Fortschritt nach dem Brief auch bei übersehener Gestalt ermöglichen; aktuell kann die Blick-Zustandsfolge den Fortgang blockieren.
+2. P0: Garten-Annäherung erst warnen und Umkehr ermöglichen; aktueller Trigger führt direkt zum Tod.
+3. P1: Sichtlinien statt nur Blickwinkel prüfen. Gedanken nicht vor die Wahrnehmung setzen.
+4. P1: Ton für Normalität, Walters Unterbrechung und die Verbindung Motor/Wagen ergänzen. Bestehende Lizenzregeln beachten.
+5. Kapitel mit Personen ohne Vorwissen testen; Spannung, Verwirrung und Frust getrennt bewerten. Zahlen im Analyseplan sind Zielwerte, keine erreichten Testergebnisse.
+
+Übergabe: Basis ist `grafik/kapitel-1` bei `f0c0ebabf517e81b5010fe9ef3f14e0d1beca61f`. Nach Freigabe der GitHub-App funktioniert der Schreibzugriff. Die Dokumentation liegt auf `recherche/spannungsdramaturgie`; der Pull Request richtet sich gegen `grafik/kapitel-1`, damit ausschließlich diese Recherche-Ergänzungen enthalten sind. Nichts wurde nach `main` gemergt. Bestehende Merge-Reihenfolge bleibt PR #2 → PR #3; anschließend diesen Dokumentations-PR übernehmen bzw. seine Basis nach den Merges anpassen. Nächste Arbeitsetappe: die oben genannten P0-Punkte implementieren und in Godot testen.

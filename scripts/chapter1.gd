@@ -46,11 +46,14 @@ var street_thought_shown := false
 var same_man_shown := false
 var garden_warning_armed := false
 var garden_warning_timer := 0.0
+var ambient_audio: Node
 
 
 func _ready() -> void:
 	_build_environment()
 	_build_world()
+	ambient_audio = preload("res://scripts/ambient_audio.gd").new()
+	add_child(ambient_audio)
 
 	ui = UIScript.new()
 	add_child(ui)
@@ -98,6 +101,7 @@ func _on_trunk_used() -> void:
 	# Beim zweiten Gang hat Walter aufgehört zu mähen.
 	if boxes_placed == 1 and not walter_staring:
 		walter_staring = true
+		ambient_audio.set_mower_active(false)
 		ui.show_thought("THOUGHT_WALTER", 5.0)
 
 
@@ -113,6 +117,7 @@ func _on_drop_used() -> void:
 		trunk.enabled = true
 		return
 	walter_staring = false
+	ambient_audio.set_mower_active(true)
 	state = State.EXPLORE
 	ui.set_task("TASK_EXPLORE")
 	ui.show_thought("THOUGHT_BOXES", 6.0)
@@ -189,6 +194,7 @@ func _on_garden_entered() -> void:
 
 func _start_engine() -> void:
 	engine_started = true
+	ambient_audio.engine_cue()
 	dark_car.visible = true
 	ui.show_thought("THOUGHT_ENGINE", 5.0)
 	ui.set_task("TASK_TO_CAR")

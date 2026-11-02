@@ -54,6 +54,7 @@ func _ready() -> void:
 	_build_world()
 	ambient_audio = preload("res://scripts/ambient_audio.gd").new()
 	add_child(ambient_audio)
+	add_child(preload("res://scripts/pause_menu.gd").new())
 
 	ui = UIScript.new()
 	add_child(ui)

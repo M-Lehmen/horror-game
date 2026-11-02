@@ -11,21 +11,21 @@ extends Node
 var _anim: AnimationPlayer
 
 func _ready() -> void:
-    if not animation_player_path.is_empty():
-        _anim = get_node_or_null(animation_player_path) as AnimationPlayer
+	if not animation_player_path.is_empty():
+		_anim = get_node_or_null(animation_player_path) as AnimationPlayer
 
 func play_state(state: String) -> bool:
-    if _anim == null:
-        return false
-    var clip := ""
-    match state:
-        "idle": clip = idle_name
-        "walk": clip = walk_name
-        "wave": clip = wave_name
-        "attack": clip = attack_name
-        _: return false
-    if not _anim.has_animation(clip):
-        return false
-    if _anim.current_animation != clip:
-        _anim.play(clip, 0.2)
-    return true
+	if _anim == null:
+		return false
+	var clip := ""
+	match state:
+		"idle": clip = idle_name
+		"walk": clip = walk_name
+		"wave": clip = wave_name
+		"attack": clip = attack_name
+		_: return false
+	if not _anim.has_animation(clip):
+		return false
+	if _anim.current_animation != clip:
+		_anim.play(clip, 0.2)
+	return true

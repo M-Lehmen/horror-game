@@ -7,8 +7,8 @@ Diese Datei gilt für jede KI, die in diesem Repo arbeitet. Codex liest sie auto
 | Wer | Aufgabe | Branches |
 | --- | --- | --- |
 | Claude (Claude Code) | Hauptentwickler: Features, Kapitel, Welt, Refactorings, PRs | `claude/<thema>` |
-| Codex (Plugin oder CLI) | Review jedes Claude-PRs; kleine, klar abgegrenzte Aufgaben (Bugfix, Test); Vertretung, wenn Claude nicht verfügbar ist | `codex/<thema>` |
-| ChatGPT (Chat) | Story, Briefe, Dialoge, Recherche. Ändert keinen Code direkt, Ergebnisse gehen als Text an Claude oder Codex | keine |
+| Codex (Plugin oder CLI) | Review jedes Claude-PRs; kleine, klar abgegrenzte Aufgaben (Bugfix, Test); eigene 3D-Modelle per Blender-Skript (siehe unten); Vertretung, wenn Claude nicht verfügbar ist | `codex/<thema>`, Modelle auf `codex/assets-<thema>` |
+| ChatGPT (Chat) | Story, Briefe, Dialoge, Recherche; Bilder für Texturen, Poster, Briefe, Schilder. Ändert keinen Code direkt, Ergebnisse gehen an Claude oder Codex | keine |
 | Marcelo | Entscheidet, testet, merged | – |
 
 ## Branches und Pull Requests
@@ -27,6 +27,17 @@ Diese Datei gilt für jede KI, die in diesem Repo arbeitet. Codex liest sie auto
 - Codex-PR: Claude prüft.
 - Der Reviewer ändert nichts selbst, sondern listet Funde mit Datei und Zeile als PR-Kommentar. Der Autor behebt sie auf seinem Branch.
 - Danach testet Marcelo im Spiel und merged.
+
+## Eigene Modelle und Texturen
+
+Ziel: Modelle selbst erzeugen, statt Packs zu kaufen. Codex baut sie, Claude prüft sie.
+
+- Codex erzeugt Modelle als **Blender-Python-Skript** (`tools/blender/<name>.py`), das eine `.glb` exportiert. Skript und `.glb` kommen beide ins Repo, damit das Modell reproduzierbar und änderbar bleibt.
+- Ablage: `assets/models/generated/<name>.glb`, Eintrag in `assets/CREDITS.md` als "selbst erzeugt (Codex/ChatGPT)".
+- Texturen und Bilder aus ChatGPT: `assets/textures/generated/`, ebenfalls in `assets/CREDITS.md`.
+- Menschen mit Skelett und Animation bleiben bei Mixamo.
+- Vorgaben pro Modell: Maßstab in Metern, Y nach oben, Ursprung am Boden, sinnvolle Namen, PBR-Material, Poly-Budget (Kleinteile unter 5 000, Möbel unter 20 000, Häuser und Autos unter 60 000 Dreiecke), Dateigröße unter 20 MB.
+- Claude prüft jedes Modell vor dem Einbau: Import in Godot ohne Fehler, Maße und Ausrichtung, Dreiecke und Dateigröße, Kollision, Screenshot im Spiel neben bestehenden Assets. Ergebnis als Review-Kommentar mit Screenshot.
 
 ## Konflikte vermeiden
 

@@ -1,6 +1,6 @@
 # Übergabe ChatGPT → Claude / nächste Sitzung
 
-Stand: 02.11.2026, Branch `feature/audio-gameplay-systeme-20261102` (Basis `recherche/spannungsdramaturgie`, PR #4).
+Stand: 02.11.2026, Draft-PR #5: https://github.com/M-Lehmen/horror-game/pull/5. Branch `feature/audio-gameplay-systeme-20261102` (Basis `recherche/spannungsdramaturgie`, PR #4).
 Auf Basis von Claudes PR-Kette #2 → #3 und Recherche #4. Keine Änderungen an fremden Branches, kein Merge nach main, kein force-push.
 
 ## Fertig im Arbeitsbranch (noch nicht Godot-laufzeitgetestet)
@@ -34,3 +34,6 @@ Danach 1920×1080 mit Fenster spielen, Pausenmenü und Checkpoint ausprobieren u
 
 ## Zusammenarbeit / Merge
 PR dieses Branches gegen `recherche/spannungsdramaturgie`, damit keine Arbeiten aus #2/#3/#4 dupliziert im Diff erscheinen. Nach Merge der PR-Kette PR-Basis ggf. anpassen. Claude soll vor Fortsetzung diese Datei, offene PRs und Commits erneut einsehen. Keine automatische Wiederaufnahme nach Chat-Ende; nächste ChatGPT-Sitzung muss neu gestartet werden.
+
+## Hinweis zum PR
+Draft-PR #5 angelegt. GitHub meldete beim Erstellen `mergeable=false`; Ursache ist noch nicht geklärt. Vor Merge Konflikte / Status und Godot-Abnahme prüfen. Nach Erstellen des PR wurde `tests/smoke.gd` noch auf eine konstante Preload-Referenz umgestellt; Änderung liegt auf demselben PR-Branch.

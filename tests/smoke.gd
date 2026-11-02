@@ -1,4 +1,5 @@
 extends SceneTree
+const HorrorRules := preload("res://scripts/horror_rules.gd")
 ## Schneller, assetfreier Smoke-Test: godot --headless --path . --script res://tests/smoke.gd
 
 func _initialize() -> void:
@@ -18,10 +19,9 @@ func _run() -> void:
             return
     var gameplay := FileAccess.get_file_as_string(required[0])
     var localization := FileAccess.get_file_as_string(required[3])
-    var rules := load("res://scripts/horror_rules.gd")
     var checks := [
-        ["observer-fallback", rules.should_hide_observer(1, 32.0) and not rules.should_hide_observer(1, 31.9) and rules.should_hide_observer(2, 40.0)],
-        ["garten-warnung", rules.should_warn_garden(false) and not rules.should_attack_garden(true, 1.0) and rules.should_attack_garden(true, 0.0)],
+        ["observer-fallback", HorrorRules.should_hide_observer(1, 32.0) and not HorrorRules.should_hide_observer(1, 31.9) and HorrorRules.should_hide_observer(2, 40.0)],
+        ["garten-warnung", HorrorRules.should_warn_garden(false) and not HorrorRules.should_attack_garden(true, 1.0) and HorrorRules.should_attack_garden(true, 0.0)],
         ["raycast-sichtlinie", "intersect_ray(query)" in gameplay],
         ["uebersetzung", "THOUGHT_GARDEN_WARNING" in localization],
         ["motor-audio", "ambient_audio.engine_cue()" in gameplay]

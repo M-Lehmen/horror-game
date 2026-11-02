@@ -77,18 +77,20 @@ func _pbr(id: String, scale: float, tint: Color = Color.WHITE) -> StandardMateri
 
 
 ## Lädt ein glTF-Modell, skaliert es auf die gewünschte Höhe und stellt es mit der Unterseite auf pos.
-## only_first: Modelle mit mehreren Varianten nebeneinander (z. B. Hydrant neu/alt) auf die erste kürzen.
-func _model(path: String, pos: Vector3, height: float, rot_y: float = 0.0, only_first: bool = false) -> Node3D:
+## drop_aged: bei Modellen mit neuer und gealterter Variante nebeneinander (z. B. Hydrant)
+## alle Meshes entfernen, deren Name auf "_aged" endet.
+func _model(path: String, pos: Vector3, height: float, rot_y: float = 0.0, drop_aged: bool = false) -> Node3D:
 	var inst: Node3D = load(path).instantiate()
-	if only_first:
-		var meshes := inst.find_children("*", "MeshInstance3D", true, false)
-		for i in range(1, meshes.size()):
-			meshes[i].free()
+	if drop_aged:
+		for mesh in inst.find_children("*_aged", "MeshInstance3D", true, false):
+			mesh.free()
 	add_child(inst)
 	var box := AABB()
 	var first := true
+	# Box im Modellraum messen, damit eine verschobene/gedrehte Kapitel-Wurzel nicht mitzählt.
+	var to_model := inst.global_transform.affine_inverse()
 	for mesh in inst.find_children("*", "MeshInstance3D", true, false):
-		var b: AABB = mesh.global_transform * mesh.get_aabb()
+		var b: AABB = to_model * mesh.global_transform * mesh.get_aabb()
 		box = b if first else box.merge(b)
 		first = false
 	var s := height / maxf(box.size.y, 0.001)

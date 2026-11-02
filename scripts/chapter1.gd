@@ -487,18 +487,20 @@ func _build_world() -> void:
 	observer = Node3D.new()
 	observer.position = Vector3(8, 0, 25.6)
 	add_child(observer)
-	var dark := _mat(Color(0.02, 0.02, 0.02))
-	var body := CSGCylinder3D.new()
-	body.radius = 0.25
-	body.height = 1.65
-	body.position.y = 0.825
-	body.material = dark
-	observer.add_child(body)
+	# Langer dunkler Mantel, breite Schultern, Hut
+	var dark := Color(0.02, 0.02, 0.02)
+	_cyl(observer, 0.3, 1.15, Vector3(0, 0.575, 0), dark)
+	_box(observer, Vector3(0.5, 0.5, 0.28), Vector3(0, 1.38, 0), dark, false)
+	_cyl(observer, 0.05, 0.1, Vector3(0, 1.66, 0), dark)
 	var head := CSGSphere3D.new()
-	head.radius = 0.14
-	head.position.y = 1.8
-	head.material = dark
+	head.radius = 0.13
+	head.position.y = 1.78
+	head.material = _mat(dark)
 	observer.add_child(head)
+	_cyl(observer, 0.27, 0.02, Vector3(0, 1.87, 0), dark)
+	_cyl(observer, 0.14, 0.16, Vector3(0, 1.95, 0), dark)
+	for side in [-1.0, 1.0]:
+		_box(observer, Vector3(0.1, 0.7, 0.1), Vector3(0.3 * side, 1.15, 0), dark, false)
 	observer.visible = false
 
 	# Sein dunkler Wagen wartet hinter dem Haus gegenüber, die Kabine ist leicht durchsichtig.
@@ -591,7 +593,7 @@ func _build_decor() -> void:
 			_model(M % ["trashbag", "trashbag"], p + Vector3(0.55, 0, 0.1), 0.5, i)
 
 	for p in [Vector3(-12, 0, 16.3), Vector3(26, 0, 23.7)]:
-		_model(M % ["fire_hydrant", "fire_hydrant"], p, 0.75)
+		_model(M % ["fire_hydrant", "fire_hydrant"], p, 0.75, 0.0, true)
 		_solid(Vector3(0.35, 0.75, 0.35), p + Vector3(0, 0.375, 0))
 
 	_sign(Vector3(12, 0, 16.3), "SPEED\nLIMIT\n25", Color(0.9, 0.9, 0.88))
@@ -976,18 +978,32 @@ func _person(pos: Vector3, body_color: Color, skin: Color) -> Node3D:
 	var p := Node3D.new()
 	p.position = pos
 	add_child(p)
-	_cyl(p, 0.24, 1.5, Vector3(0, 0.75, 0), body_color)
+	var pants := body_color.darkened(0.5)
+	for side in [-1.0, 1.0]:
+		_cyl(p, 0.08, 0.85, Vector3(0.1 * side, 0.425, 0), pants)
+	_box(p, Vector3(0.42, 0.6, 0.24), Vector3(0, 1.15, 0), body_color, false)
+	_cyl(p, 0.05, 0.1, Vector3(0, 1.48, 0), skin)
 	var head := CSGSphere3D.new()
-	head.radius = 0.14
-	head.position.y = 1.68
+	head.radius = 0.12
+	head.position.y = 1.62
 	head.material = _mat(skin)
 	p.add_child(head)
-	_box(p, Vector3(0.06, 0.06, 0.1), Vector3(0, 1.66, -0.15), skin, false)
+	var hair := CSGSphere3D.new()
+	hair.radius = 0.125
+	hair.position = Vector3(0, 1.66, 0.02)
+	hair.material = _mat(Color(0.55, 0.53, 0.5))
+	p.add_child(hair)
+	_box(p, Vector3(0.05, 0.05, 0.08), Vector3(0, 1.6, -0.12), skin, false)
 	for side in [-1.0, 1.0]:
 		var pivot := Node3D.new()
-		pivot.position = Vector3(0.3 * side, 1.42, 0)
+		pivot.position = Vector3(0.26 * side, 1.42, 0)
 		p.add_child(pivot)
-		_box(pivot, Vector3(0.1, 0.6, 0.1), Vector3(0, -0.3, 0), body_color, false)
+		_box(pivot, Vector3(0.09, 0.58, 0.09), Vector3(0, -0.29, 0), body_color, false)
+		var hand := CSGSphere3D.new()
+		hand.radius = 0.05
+		hand.position.y = -0.62
+		hand.material = _mat(skin)
+		pivot.add_child(hand)
 		if side > 0.0:
 			p.set_meta("arm", pivot)
 	return p
@@ -1010,9 +1026,9 @@ func _car(pos: Vector3, rot_y: float, color: Color, collide: bool, see_through: 
 	_box(c, Vector3(1.64, 0.5, 1.7), Vector3(0, 1.07, 0.3), glass, false)          # Seitenscheiben
 	_box(c, Vector3(1.66, 0.06, 1.6), Vector3(0, 1.34, 0.3), paint, false)         # Dach
 	var front := _box(c, Vector3(1.6, 0.62, 0.04), Vector3(0, 1.06, -0.72), glass, false)
-	front.rotation.x = -0.65
+	front.rotation.x = 0.65  # Oberkante nach hinten geneigt
 	var rear := _box(c, Vector3(1.6, 0.58, 0.04), Vector3(0, 1.06, 1.3), glass, false)
-	rear.rotation.x = 0.6
+	rear.rotation.x = -0.6
 	for z in [-2.28, 2.28]:
 		_box(c, Vector3(1.86, 0.18, 0.12), Vector3(0, 0.38, z), dark, false)       # Stoßstangen
 	for x in [-0.62, 0.62]:
@@ -1183,8 +1199,13 @@ func _pbr(id: String, scale: float, tint: Color = Color.WHITE) -> StandardMateri
 
 
 ## Lädt ein glTF-Modell, skaliert es auf die gewünschte Höhe und stellt es mit der Unterseite auf pos.
-func _model(path: String, pos: Vector3, height: float, rot_y: float = 0.0) -> Node3D:
+## only_first: Modelle mit mehreren Varianten nebeneinander (z. B. Hydrant neu/alt) auf die erste kürzen.
+func _model(path: String, pos: Vector3, height: float, rot_y: float = 0.0, only_first: bool = false) -> Node3D:
 	var inst: Node3D = load(path).instantiate()
+	if only_first:
+		var meshes := inst.find_children("*", "MeshInstance3D", true, false)
+		for i in range(1, meshes.size()):
+			meshes[i].free()
 	add_child(inst)
 	var box := AABB()
 	var first := true

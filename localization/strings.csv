@@ -38,3 +38,9 @@ GAME_OVER_FOLLOWED,You should not have followed.,Du hättest nicht folgen sollen
 CHAPTER1_END,End of Chapter 1: The Key,Ende von Kapitel 1: Der Schlüssel
 DEMO_END,Thanks for playing the prototype.,Danke fürs Spielen des Prototyps.
 THOUGHT_GARDEN_WARNING,Something is wrong. I should turn back now.,Hier stimmt etwas nicht. Ich sollte jetzt umkehren.
+MENU_PAUSED,Paused,Pausiert
+MENU_RESUME,Resume,Fortsetzen
+MENU_VOLUME,Master volume,Gesamtlautstärke
+MENU_SENSITIVITY,Mouse sensitivity,Mausempfindlichkeit
+MENU_LANGUAGE,Change language,Sprache wechseln
+MENU_RESTART,Restart from checkpoint,Ab Checkpoint neu starten

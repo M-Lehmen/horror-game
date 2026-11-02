@@ -12,7 +12,12 @@ config_version=5
 
 config/name="The Observer"
 config/description="First-Person-Horrorspiel, Episode 1"
+run/main_scene="res://scenes/chapter1.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
+
+[autoload]
+
+Game="*res://scripts/game.gd"
 
 [internationalization]
 

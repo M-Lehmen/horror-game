@@ -14,6 +14,19 @@ Konzept: siehe [docs/konzept.md](docs/konzept.md).
 
 Beim ersten Öffnen erzeugt Godot den Ordner `.godot/` und die Übersetzungsdateien. Beides wird nicht committet bzw. automatisch neu gebaut.
 
+## Steuerung
+
+| Taste | Aktion |
+| --- | --- |
+| WASD | laufen |
+| Maus | umsehen |
+| E | interagieren |
+| Strg | ducken |
+| F2 | Sprache wechseln (DE/EN) |
+| Esc | Maus freigeben (Klick fängt sie wieder) |
+
+Die Tastenbelegung steht in `scripts/game.gd` und wird beim Start per Code registriert.
+
 ## Ordnerstruktur
 
 | Ordner | Inhalt |
